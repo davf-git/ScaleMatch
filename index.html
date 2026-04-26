@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<!-- ScaleMatch v2.3 | 2025-04-26 | Fix: ring sync bug, miles/km toggle, scale label visibility -->
+<!-- ScaleMatch v2.4 | 2025-04-26 | Fix: fullscreen exit button visibility on Safari/iPad -->
 
 <html lang="en">
 <head>
@@ -597,7 +597,8 @@ color: inherit;
 }
 
 #app.fullscreen ~ #fs-exit,
-body.fullscreen #fs-exit { display: flex; }
+#fs-exit { display: none; }
+#app.fullscreen #fs-exit { display: flex !important; }
 
 /* Leaflet overrides */
 .leaflet-control-zoom {
@@ -671,6 +672,7 @@ font-size: 15px !important;
   <!-- MAPS -->
 
   <div id="maps-container">
+  <button id="fs-exit" title="Exit fullscreen">✕<span class="tb-label">Exit</span></button>
 
 ```
 <!-- HOME PANEL -->
@@ -707,9 +709,7 @@ font-size: 15px !important;
   </div>
 </div>
 
-<!-- Fullscreen exit button (outside #app so it stays visible) -->
-
-<button id="fs-exit" title="Exit fullscreen">✕<span class="tb-label">Exit</span></button>
+<!-- Fullscreen exit button (inside maps-container for correct z-index stacking) -->
 
 <script>
 // ─────────────────────────────────────────
