@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<!-- ScaleMatch v2.2 | 2025-04-26 | Fix: button labels, pan sync off by default, obvious fullscreen exit, Voyager dark default -->
+<!-- ScaleMatch v2.3 | 2025-04-26 | Fix: ring sync bug, miles/km toggle, scale label visibility -->
 
 <html lang="en">
 <head>
@@ -186,6 +186,23 @@ min-width: 52px;
 text-align: right;
 flex-shrink: 0;
 }
+
+.ring-unit-btn {
+flex-shrink: 0;
+height: 28px;
+padding: 0 10px;
+border: 1px solid var(–accent);
+border-radius: 5px;
+background: none;
+color: var(–accent);
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 0.06em;
+cursor: pointer;
+text-transform: uppercase;
+transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ring-unit-btn:hover { background: rgba(74,222,128,0.08); }
 
 .ring-clear-btn {
 flex-shrink: 0;
@@ -498,22 +515,20 @@ z-index: 1;
 /* ── SCALE LABEL ── */
 .scale-label {
 position: absolute;
-top: 8px;
-right: 8px;
-background: rgba(12,14,18,0.82);
-border: 1px solid var(–border);
+bottom: 28px;
+left: 8px;
+background: rgba(12,14,18,0.88);
+border: 1px solid #8891a8;
 border-radius: 4px;
-padding: 3px 7px;
-font-size: 10px;
-font-weight: 600;
-letter-spacing: 0.04em;
+padding: 3px 8px;
+font-size: 11px;
+font-weight: 700;
+letter-spacing: 0.05em;
+color: #ffffff;
 pointer-events: none;
 z-index: 500;
 backdrop-filter: blur(4px);
 }
-
-#panel-home .scale-label { color: var(–accent); }
-#panel-target .scale-label { color: var(–accent2); }
 
 /* ── STATUS TOAST ── */
 .map-status {
@@ -628,6 +643,7 @@ font-size: 15px !important;
       <label>Radius</label>
       <input type="range" id="ring-radius" min="1" max="500" value="25" step="1">
       <div id="ring-val">25 km</div>
+      <button class="ring-unit-btn" id="ring-unit">mi</button>
       <button class="ring-clear-btn" id="ring-clear">Clear</button>
     </div>
   </div>
@@ -726,7 +742,6 @@ let sharedZoom = 6;
 let tileLayerHome, tileLayerTarget;
 let ringHome = null, ringTarget = null;
 let ringActive = false;
-let ringRadius = 25; // km
 
 // ─────────────────────────────────────────
 // MAP INIT
@@ -851,29 +866,42 @@ mapTarget.whenReady(() => { targetCenter = mapTarget.getCenter(); });
 // ─────────────────────────────────────────
 // DISTANCE RINGS
 // ─────────────────────────────────────────
-function metersFromKm(km) { return km * 1000; }
+let ringUnit = 'km'; // 'km' or 'mi'
+const KM_PER_MI = 1.60934;
+
+function ringRadiusMeters() {
+  const val = parseInt(ringSlider.value);
+  return ringUnit === 'mi' ? val * KM_PER_MI * 1000 : val * 1000;
+}
+
+function formatRingVal(val) {
+  return `${val} ${ringUnit}`;
+}
 
 function drawRings() {
   if (!ringActive) return;
+
   const hc = mapHome.getCenter();
   const tc = mapTarget.getCenter();
+  const r = ringRadiusMeters();
 
-  const r = metersFromKm(ringRadius);
-
-  const style = {
-    color: '#4ade80',
-    weight: 1.5,
-    fillColor: '#4ade80',
-    fillOpacity: 0.06,
-    dashArray: '6 4'
+  const styleHome = {
+    color: '#4ade80', weight: 1.5,
+    fillColor: '#4ade80', fillOpacity: 0.06,
+    dashArray: '6 4', interactive: false
   };
-  const style2 = { ...style, color: '#60a5fa', fillColor: '#60a5fa' };
+  const styleTarget = {
+    color: '#60a5fa', weight: 1.5,
+    fillColor: '#60a5fa', fillOpacity: 0.06,
+    dashArray: '6 4', interactive: false
+  };
 
+  // Always remove and recreate to guarantee correct position
   if (ringHome) { ringHome.remove(); ringHome = null; }
   if (ringTarget) { ringTarget.remove(); ringTarget = null; }
 
-  ringHome = L.circle(hc, { radius: r, ...style }).addTo(mapHome);
-  ringTarget = L.circle(tc, { radius: r, ...style2 }).addTo(mapTarget);
+  ringHome = L.circle(hc, { radius: r, ...styleHome }).addTo(mapHome);
+  ringTarget = L.circle(tc, { radius: r, ...styleTarget }).addTo(mapTarget);
 }
 
 function clearRings() {
@@ -885,23 +913,36 @@ function updateRings() {
   if (ringActive) drawRings();
 }
 
-// Redraw rings on map move
+// Redraw rings on moveend only (not move — avoids flicker and style-change spurious events)
 mapHome.on('moveend', () => { if (ringActive) drawRings(); });
 mapTarget.on('moveend', () => { if (ringActive) drawRings(); });
 
 // Ring controls
 const ringSlider = document.getElementById('ring-radius');
 const ringVal = document.getElementById('ring-val');
-
-function formatRadius(km) {
-  if (km >= 100) return `${Math.round(km)} km`;
-  if (km >= 10) return `${km} km`;
-  return `${km} km`;
-}
+const ringUnitBtn = document.getElementById('ring-unit');
 
 ringSlider.addEventListener('input', () => {
-  ringRadius = parseInt(ringSlider.value);
-  ringVal.textContent = formatRadius(ringRadius);
+  ringVal.textContent = formatRingVal(ringSlider.value);
+  if (ringActive) drawRings();
+});
+
+ringUnitBtn.addEventListener('click', () => {
+  const currentVal = parseInt(ringSlider.value);
+  if (ringUnit === 'km') {
+    ringUnit = 'mi';
+    ringUnitBtn.textContent = 'km';
+    // Convert slider value km→mi
+    const inMi = Math.round(currentVal / KM_PER_MI);
+    ringSlider.value = Math.max(1, inMi);
+  } else {
+    ringUnit = 'km';
+    ringUnitBtn.textContent = 'mi';
+    // Convert slider value mi→km
+    const inKm = Math.round(currentVal * KM_PER_MI);
+    ringSlider.value = Math.min(500, inKm);
+  }
+  ringVal.textContent = formatRingVal(ringSlider.value);
   if (ringActive) drawRings();
 });
 
@@ -928,6 +969,8 @@ document.querySelectorAll('.style-opt').forEach(btn => {
     tileLayerTarget.remove();
     tileLayerHome = makeTileLayer(style).addTo(mapHome);
     tileLayerTarget = makeTileLayer(style).addTo(mapTarget);
+    // Redraw rings on top of new tiles
+    if (ringActive) drawRings();
   });
 });
 
