@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<!-- ScaleMatch v2.1 | 2025-04-26 | Fix: larger brighter toolbar buttons, 44px touch targets -->
+
+<!-- ScaleMatch v2.2 | 2025-04-26 | Fix: button labels, pan sync off by default, obvious fullscreen exit, Voyager dark default -->
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -92,7 +94,7 @@ text-align: center;
 /* toolbar icon buttons */
 .tb-btn {
 flex-shrink: 0;
-width: 44px;
+width: 52px;
 height: 44px;
 border: 1px solid var(–border);
 border-radius: 8px;
@@ -100,11 +102,22 @@ background: var(–bg);
 color: #8891a8;
 cursor: pointer;
 display: flex;
+flex-direction: column;
 align-items: center;
 justify-content: center;
-font-size: 17px;
+gap: 2px;
+font-size: 16px;
 transition: color 0.15s, border-color 0.15s, background 0.15s;
 -webkit-tap-highlight-color: transparent;
+}
+
+.tb-btn .tb-label {
+font-size: 8px;
+font-weight: 600;
+letter-spacing: 0.06em;
+text-transform: uppercase;
+line-height: 1;
+color: inherit;
 }
 
 .tb-btn:active { opacity: 0.7; }
@@ -542,21 +555,30 @@ z-index: 9999;
 #fs-exit {
 display: none;
 position: fixed;
-top: calc(var(–safe-top) + 10px);
-right: calc(var(–safe-right) + 10px);
+top: calc(var(–safe-top) + 12px);
+right: calc(var(–safe-right) + 12px);
 z-index: 10000;
-width: 36px;
-height: 36px;
-background: rgba(12,14,18,0.85);
-border: 1px solid var(–border);
+width: 52px;
+height: 44px;
+background: rgba(12,14,18,0.92);
+border: 1px solid #8891a8;
 border-radius: 8px;
-color: var(–muted);
-font-size: 16px;
+color: #e8eaf0;
+font-size: 15px;
 cursor: pointer;
-display: none;
 align-items: center;
 justify-content: center;
+flex-direction: column;
+gap: 2px;
 backdrop-filter: blur(8px);
+}
+
+#fs-exit .tb-label {
+font-size: 8px;
+font-weight: 600;
+letter-spacing: 0.06em;
+text-transform: uppercase;
+color: inherit;
 }
 
 #app.fullscreen ~ #fs-exit,
@@ -592,14 +614,11 @@ font-size: 15px !important;
     <div id="wordmark">Scale<span>Match</span></div>
     <div class="topbar-gap"></div>
     <div id="zoom-badge">Z: —</div>
-    <!-- Ring toggle -->
-    <button class="tb-btn" id="btn-ring" title="Distance ring">⊙</button>
-    <!-- Style toggle -->
-    <button class="tb-btn" id="btn-style" title="Map style">⊞</button>
-    <!-- Pins toggle -->
-    <button class="tb-btn" id="btn-pins" title="Saved locations">◈</button>
-    <!-- Fullscreen -->
-    <button class="tb-btn" id="btn-fs" title="Fullscreen">⤢</button>
+    <button class="tb-btn" id="btn-pan" title="Sync panning">⇄<span class="tb-label">Pan</span></button>
+    <button class="tb-btn" id="btn-ring" title="Distance ring">⊙<span class="tb-label">Ring</span></button>
+    <button class="tb-btn" id="btn-style" title="Map style">⊞<span class="tb-label">Style</span></button>
+    <button class="tb-btn" id="btn-pins" title="Saved locations">◈<span class="tb-label">Pins</span></button>
+    <button class="tb-btn" id="btn-fs" title="Fullscreen">⤢<span class="tb-label">Full</span></button>
   </div>
 
   <!-- RING PANEL -->
@@ -674,7 +693,7 @@ font-size: 15px !important;
 
 <!-- Fullscreen exit button (outside #app so it stays visible) -->
 
-<button id="fs-exit" title="Exit fullscreen">✕</button>
+<button id="fs-exit" title="Exit fullscreen">✕<span class="tb-label">Exit</span></button>
 
 <script>
 // ─────────────────────────────────────────
@@ -702,6 +721,7 @@ const TILES = {
 let currentStyle = 'voyager';
 let syncLock = false;
 let panSyncLock = false;
+let panSyncActive = false; // OFF by default
 let sharedZoom = 6;
 let tileLayerHome, tileLayerTarget;
 let ringHome = null, ringTarget = null;
@@ -787,6 +807,7 @@ let targetCenter = null;
 
 function onMapMove(sourceMap, otherMap) {
   return function() {
+    if (!panSyncActive) return;
     if (panSyncLock) return;
     panSyncLock = true;
 
@@ -927,6 +948,15 @@ function togglePanel(panelId, forceState) {
 
   el.classList.toggle('open', shouldOpen);
 }
+
+document.getElementById('btn-pan').addEventListener('click', () => {
+  panSyncActive = !panSyncActive;
+  document.getElementById('btn-pan').classList.toggle('active', panSyncActive);
+  if (panSyncActive) {
+    homeCenter = mapHome.getCenter();
+    targetCenter = mapTarget.getCenter();
+  }
+});
 
 document.getElementById('btn-ring').addEventListener('click', () => {
   ringActive = !ringActive;
