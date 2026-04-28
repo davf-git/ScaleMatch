@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 
-<!-- ScaleMatch v2.4 | 2025-04-26 | Fix: fullscreen exit button visibility on Safari/iPad -->
+<!-- ScaleMatch v2.5 | 2026-04-28 | Mercator latitude correction, fixed exit button, version/credit display -->
 
 <html lang="en">
 <head>
@@ -13,12 +13,13 @@
   :root {
     --bg: #0c0e12;
     --surface: #13151c;
-    --surface2: #1a1d27;
     --border: #22252f;
     --accent: #4ade80;
     --accent2: #60a5fa;
+    --warn: #f59e0b;
     --text: #e8eaf0;
     --muted: #4b5060;
+    --bright: #8891a8;
     --panel-h: 56px;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -63,16 +64,29 @@ z-index: 1000;
 }
 
 #wordmark {
+display: flex;
+flex-direction: column;
+flex-shrink: 0;
+}
+
+#wordmark-title {
 font-size: 13px;
 font-weight: 700;
 letter-spacing: 0.1em;
 color: var(–accent);
-white-space: nowrap;
-flex-shrink: 0;
 text-transform: uppercase;
+line-height: 1;
 }
 
-#wordmark span { color: var(–accent2); }
+#wordmark-title span { color: var(–accent2); }
+
+#wordmark-sub {
+font-size: 8px;
+font-weight: 500;
+letter-spacing: 0.08em;
+color: var(–muted);
+margin-top: 2px;
+}
 
 .topbar-gap { flex: 1; }
 
@@ -80,7 +94,7 @@ text-transform: uppercase;
 font-size: 11px;
 font-weight: 600;
 letter-spacing: 0.05em;
-color: #8891a8;
+color: var(–bright);
 background: var(–bg);
 border: 1px solid var(–border);
 border-radius: 4px;
@@ -91,7 +105,24 @@ min-width: 52px;
 text-align: center;
 }
 
-/* toolbar icon buttons */
+/* ── DISTORTION BADGE ── */
+#distortion-badge {
+font-size: 10px;
+font-weight: 600;
+letter-spacing: 0.04em;
+border-radius: 4px;
+padding: 3px 7px;
+white-space: nowrap;
+flex-shrink: 0;
+display: none;
+border: 1px solid var(–warn);
+color: var(–warn);
+background: rgba(245,158,11,0.08);
+}
+
+#distortion-badge.show { display: block; }
+
+/* ── TOOLBAR BUTTONS ── */
 .tb-btn {
 flex-shrink: 0;
 width: 52px;
@@ -99,7 +130,7 @@ height: 44px;
 border: 1px solid var(–border);
 border-radius: 8px;
 background: var(–bg);
-color: #8891a8;
+color: var(–bright);
 cursor: pointer;
 display: flex;
 flex-direction: column;
@@ -122,32 +153,31 @@ color: inherit;
 
 .tb-btn:active { opacity: 0.7; }
 .tb-btn.active { color: var(–accent); border-color: var(–accent); background: rgba(74,222,128,0.08); }
-.tb-btn.active2 { color: var(–accent2); border-color: var(–accent2); background: rgba(96,165,250,0.08); }
 
-/* ── RING PANEL (collapsible) ── */
-#ring-panel {
+/* ── COLLAPSIBLE PANELS ── */
+.slide-panel {
 flex-shrink: 0;
 overflow: hidden;
 max-height: 0;
-transition: max-height 0.25s ease, border-bottom 0.25s;
+transition: max-height 0.25s ease;
 background: var(–surface);
 border-bottom: 0px solid var(–border);
 }
 
-#ring-panel.open {
-max-height: 52px;
+.slide-panel.open {
+max-height: 56px;
 border-bottom: 1px solid var(–border);
 }
 
-#ring-inner {
-height: 52px;
+.panel-inner {
+height: 56px;
 display: flex;
 align-items: center;
 padding: 0 12px;
 gap: 10px;
 }
 
-#ring-inner label {
+.panel-inner label {
 font-size: 11px;
 font-weight: 600;
 letter-spacing: 0.08em;
@@ -156,6 +186,7 @@ text-transform: uppercase;
 flex-shrink: 0;
 }
 
+/* ── RING PANEL ── */
 #ring-radius {
 flex: 1;
 max-width: 180px;
@@ -170,8 +201,8 @@ cursor: pointer;
 
 #ring-radius::-webkit-slider-thumb {
 -webkit-appearance: none;
-width: 18px;
-height: 18px;
+width: 20px;
+height: 20px;
 border-radius: 50%;
 background: var(–accent);
 cursor: pointer;
@@ -200,11 +231,9 @@ font-weight: 700;
 letter-spacing: 0.06em;
 cursor: pointer;
 text-transform: uppercase;
-transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
-.ring-unit-btn:hover { background: rgba(74,222,128,0.08); }
 
-.ring-clear-btn {
+.panel-clear-btn {
 flex-shrink: 0;
 height: 28px;
 padding: 0 10px;
@@ -217,34 +246,9 @@ font-weight: 600;
 letter-spacing: 0.06em;
 cursor: pointer;
 text-transform: uppercase;
-transition: color 0.15s, border-color 0.15s;
 }
 
-.ring-clear-btn:hover { color: var(–text); border-color: var(–muted); }
-
-/* ── TILE/STYLE PANEL (collapsible) ── */
-#style-panel {
-flex-shrink: 0;
-overflow: hidden;
-max-height: 0;
-transition: max-height 0.25s ease, border-bottom 0.25s;
-background: var(–surface);
-border-bottom: 0px solid var(–border);
-}
-
-#style-panel.open {
-max-height: 52px;
-border-bottom: 1px solid var(–border);
-}
-
-#style-inner {
-height: 52px;
-display: flex;
-align-items: center;
-padding: 0 12px;
-gap: 6px;
-}
-
+/* ── STYLE PANEL ── */
 .style-opt {
 height: 30px;
 padding: 0 12px;
@@ -267,23 +271,9 @@ border-color: var(–accent2);
 background: rgba(96,165,250,0.08);
 }
 
-/* ── PINS PANEL (collapsible) ── */
-#pins-panel {
-flex-shrink: 0;
-overflow: hidden;
-max-height: 0;
-transition: max-height 0.3s ease, border-bottom 0.3s;
-background: var(–surface);
-border-bottom: 0px solid var(–border);
-}
-
-#pins-panel.open {
-max-height: 58px;
-border-bottom: 1px solid var(–border);
-}
-
+/* ── PINS PANEL ── */
 #pins-inner {
-height: 58px;
+height: 56px;
 display: flex;
 align-items: center;
 padding: 0 10px;
@@ -304,57 +294,17 @@ border-radius: 16px;
 background: var(–bg);
 color: var(–text);
 font-size: 11px;
-font-weight: 500;
 cursor: pointer;
 display: flex;
 align-items: center;
 gap: 5px;
 white-space: nowrap;
-transition: border-color 0.15s;
 max-width: 140px;
 }
 
-.pin-chip:hover { border-color: var(–muted); }
-
-.pin-chip .pin-dot {
-width: 6px;
-height: 6px;
-border-radius: 50%;
-flex-shrink: 0;
-}
-
-.pin-chip .pin-label {
-overflow: hidden;
-text-overflow: ellipsis;
-white-space: nowrap;
-}
-
-.pin-chip .pin-del {
-flex-shrink: 0;
-color: var(–muted);
-font-size: 13px;
-line-height: 1;
-margin-left: 2px;
-}
-
-.pin-add-btn {
-flex-shrink: 0;
-height: 32px;
-padding: 0 10px;
-border: 1px dashed var(–border);
-border-radius: 16px;
-background: none;
-color: var(–muted);
-font-size: 11px;
-font-weight: 600;
-letter-spacing: 0.06em;
-cursor: pointer;
-white-space: nowrap;
-text-transform: uppercase;
-display: flex;
-align-items: center;
-gap: 4px;
-}
+.pin-chip .pin-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.pin-chip .pin-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pin-chip .pin-del { flex-shrink: 0; color: var(–muted); font-size: 13px; line-height: 1; }
 
 /* ── MAPS CONTAINER ── */
 #maps-container {
@@ -374,11 +324,7 @@ position: relative;
 .divider { width: 100%; height: 1px; }
 }
 
-.divider {
-background: var(–border);
-flex-shrink: 0;
-z-index: 10;
-}
+.divider { background: var(–border); flex-shrink: 0; z-index: 10; }
 
 .map-panel {
 flex: 1;
@@ -389,7 +335,7 @@ min-height: 0;
 position: relative;
 }
 
-/* ── SEARCH BAR per panel ── */
+/* ── SEARCH BAR ── */
 .search-bar {
 flex-shrink: 0;
 height: 40px;
@@ -409,7 +355,7 @@ font-weight: 700;
 letter-spacing: 0.12em;
 text-transform: uppercase;
 flex-shrink: 0;
-width: 38px;
+width: 44px;
 }
 
 #panel-home .panel-label { color: var(–accent); }
@@ -446,14 +392,11 @@ font-size: 13px;
 display: flex;
 align-items: center;
 justify-content: center;
-transition: opacity 0.15s;
 }
 
-.search-btn:active { opacity: 0.7; }
 #panel-home .search-btn { background: var(–accent); color: #0c0e12; }
 #panel-target .search-btn { background: var(–accent2); color: #0c0e12; }
 
-/* pin-this button in search bar */
 .pin-this-btn {
 flex-shrink: 0;
 width: 28px;
@@ -470,10 +413,8 @@ justify-content: center;
 transition: color 0.15s, border-color 0.15s;
 }
 
-.pin-this-btn:active { opacity: 0.7; }
 .pin-this-btn.pinned { color: var(–accent); border-color: var(–accent); }
 
-/* ── AUTOCOMPLETE ── */
 .autocomplete-list {
 position: absolute;
 top: 40px;
@@ -505,12 +446,8 @@ line-height: 1.3;
 .ac-item:last-child { border-bottom: none; }
 .ac-item:hover, .ac-item:active { background: var(–bg); }
 
-/* ── MAP ── */
-.map-view {
-flex: 1;
-min-height: 0;
-z-index: 1;
-}
+/* ── MAP VIEW ── */
+.map-view { flex: 1; min-height: 0; z-index: 1; }
 
 /* ── SCALE LABEL ── */
 .scale-label {
@@ -518,7 +455,7 @@ position: absolute;
 bottom: 28px;
 left: 8px;
 background: rgba(12,14,18,0.88);
-border: 1px solid #8891a8;
+border: 1px solid var(–bright);
 border-radius: 4px;
 padding: 3px 8px;
 font-size: 11px;
@@ -551,11 +488,23 @@ transition: opacity 0.3s;
 
 .map-status.show { opacity: 1; }
 
+/* ── CREDIT ── */
+#credit {
+position: absolute;
+bottom: 6px;
+right: 8px;
+font-size: 9px;
+font-weight: 500;
+letter-spacing: 0.05em;
+color: var(–muted);
+pointer-events: none;
+z-index: 500;
+opacity: 0.6;
+}
+
 /* ── FULLSCREEN ── */
 #app.fullscreen #topbar,
-#app.fullscreen #ring-panel,
-#app.fullscreen #style-panel,
-#app.fullscreen #pins-panel,
+#app.fullscreen .slide-panel,
 #app.fullscreen .search-bar {
 display: none !important;
 }
@@ -567,25 +516,27 @@ inset: 0;
 z-index: 9999;
 }
 
+/* ── FULLSCREEN EXIT ── */
 #fs-exit {
 display: none;
 position: fixed;
 top: calc(var(–safe-top) + 12px);
 right: calc(var(–safe-right) + 12px);
 z-index: 10000;
-width: 52px;
-height: 44px;
+width: 56px;
+height: 48px;
 background: rgba(12,14,18,0.92);
-border: 1px solid #8891a8;
+border: 1px solid var(–bright);
 border-radius: 8px;
-color: #e8eaf0;
+color: var(–text);
 font-size: 15px;
 cursor: pointer;
+flex-direction: column;
 align-items: center;
 justify-content: center;
-flex-direction: column;
 gap: 2px;
 backdrop-filter: blur(8px);
+-webkit-tap-highlight-color: transparent;
 }
 
 #fs-exit .tb-label {
@@ -596,8 +547,6 @@ text-transform: uppercase;
 color: inherit;
 }
 
-#app.fullscreen ~ #fs-exit,
-#fs-exit { display: none; }
 #app.fullscreen #fs-exit { display: flex !important; }
 
 /* Leaflet overrides */
@@ -627,32 +576,36 @@ font-size: 15px !important;
   <!-- TOPBAR -->
 
   <div id="topbar">
-    <div id="wordmark">Scale<span>Match</span></div>
+    <div id="wordmark">
+      <div id="wordmark-title">Scale<span>Match</span> <span style="color:var(--muted);font-size:10px;font-weight:500;letter-spacing:0.05em;">v2.5</span></div>
+      <div id="wordmark-sub">© Dave Forman</div>
+    </div>
     <div class="topbar-gap"></div>
+    <div id="distortion-badge"></div>
     <div id="zoom-badge">Z: —</div>
-    <button class="tb-btn" id="btn-pan" title="Sync panning">⇄<span class="tb-label">Pan</span></button>
-    <button class="tb-btn" id="btn-ring" title="Distance ring">⊙<span class="tb-label">Ring</span></button>
-    <button class="tb-btn" id="btn-style" title="Map style">⊞<span class="tb-label">Style</span></button>
-    <button class="tb-btn" id="btn-pins" title="Saved locations">◈<span class="tb-label">Pins</span></button>
-    <button class="tb-btn" id="btn-fs" title="Fullscreen">⤢<span class="tb-label">Full</span></button>
+    <button class="tb-btn" id="btn-pan">⇄<span class="tb-label">Pan</span></button>
+    <button class="tb-btn" id="btn-ring">⊙<span class="tb-label">Ring</span></button>
+    <button class="tb-btn" id="btn-style">⊞<span class="tb-label">Style</span></button>
+    <button class="tb-btn" id="btn-pins">◈<span class="tb-label">Pins</span></button>
+    <button class="tb-btn" id="btn-fs">⤢<span class="tb-label">Full</span></button>
   </div>
 
   <!-- RING PANEL -->
 
-  <div id="ring-panel">
-    <div id="ring-inner">
+  <div class="slide-panel" id="ring-panel">
+    <div class="panel-inner">
       <label>Radius</label>
       <input type="range" id="ring-radius" min="1" max="500" value="25" step="1">
       <div id="ring-val">25 km</div>
       <button class="ring-unit-btn" id="ring-unit">mi</button>
-      <button class="ring-clear-btn" id="ring-clear">Clear</button>
+      <button class="panel-clear-btn" id="ring-clear">Clear</button>
     </div>
   </div>
 
   <!-- STYLE PANEL -->
 
-  <div id="style-panel">
-    <div id="style-inner">
+  <div class="slide-panel" id="style-panel">
+    <div class="panel-inner">
       <button class="style-opt active" data-style="voyager">Voyager</button>
       <button class="style-opt" data-style="positron">Minimal</button>
       <button class="style-opt" data-style="satellite">Satellite</button>
@@ -662,196 +615,247 @@ font-size: 15px !important;
 
   <!-- PINS PANEL -->
 
-  <div id="pins-panel">
+  <div class="slide-panel" id="pins-panel">
     <div id="pins-inner">
       <div id="pins-list"></div>
-      <!-- add-home / add-target buttons added dynamically -->
     </div>
   </div>
 
   <!-- MAPS -->
 
   <div id="maps-container">
-  <button id="fs-exit" title="Exit fullscreen">✕<span class="tb-label">Exit</span></button>
 
 ```
-<!-- HOME PANEL -->
+<!-- FULLSCREEN EXIT - inside maps-container for correct stacking -->
+<button id="fs-exit">✕<span class="tb-label">Exit</span></button>
+
+<!-- HOME -->
 <div class="map-panel" id="panel-home">
   <div class="search-bar">
     <div class="panel-label">Home</div>
     <input class="search-input" id="home-input" type="text" placeholder="Search home location…" autocomplete="off" autocorrect="off" spellcheck="false">
-    <button class="search-btn" id="home-btn" title="Search">↵</button>
-    <button class="pin-this-btn" id="home-pin-btn" title="Pin this location">◈</button>
+    <button class="search-btn" id="home-btn">↵</button>
+    <button class="pin-this-btn" id="home-pin-btn">◈</button>
     <div class="autocomplete-list" id="home-ac"></div>
   </div>
   <div class="map-view" id="map-home"></div>
   <div class="scale-label" id="home-scale">—</div>
-  <div class="map-status" id="home-status">Searching…</div>
+  <div class="map-status" id="home-status"></div>
 </div>
 
 <div class="divider"></div>
 
-<!-- TARGET PANEL -->
+<!-- TARGET -->
 <div class="map-panel" id="panel-target">
   <div class="search-bar">
     <div class="panel-label">Target</div>
     <input class="search-input" id="target-input" type="text" placeholder="Search target location…" autocomplete="off" autocorrect="off" spellcheck="false">
-    <button class="search-btn" id="target-btn" title="Search">↵</button>
-    <button class="pin-this-btn" id="target-pin-btn" title="Pin this location">◈</button>
+    <button class="search-btn" id="target-btn">↵</button>
+    <button class="pin-this-btn" id="target-pin-btn">◈</button>
     <div class="autocomplete-list" id="target-ac"></div>
   </div>
   <div class="map-view" id="map-target"></div>
   <div class="scale-label" id="target-scale">—</div>
-  <div class="map-status" id="target-status">Searching…</div>
+  <div class="map-status" id="target-status"></div>
 </div>
 ```
 
   </div>
-</div>
 
-<!-- Fullscreen exit button (inside maps-container for correct z-index stacking) -->
+  <!-- Credit also shown in normal view bottom-right of app -->
+
+  <div id="credit">© Dave Forman</div>
+
+</div>
 
 <script>
 // ─────────────────────────────────────────
 // TILE CONFIGS
 // ─────────────────────────────────────────
 const TILES = {
-  voyager: {
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    sub: 'abcd'
-  },
-  positron: {
-    url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-    sub: 'abcd'
-  },
-  satellite: {
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    sub: ''
-  },
-  terrain: {
-    url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-    sub: 'abc'
-  }
+  voyager:  { url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', sub: 'abcd', maxZoom: 19 },
+  positron: { url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',           sub: 'abcd', maxZoom: 19 },
+  satellite:{ url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', sub: '', maxZoom: 19 },
+  terrain:  { url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',                         sub: 'abc',  maxZoom: 17 }
 };
 
-let currentStyle = 'voyager';
-let syncLock = false;
-let panSyncLock = false;
-let panSyncActive = false; // OFF by default
-let sharedZoom = 6;
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let currentStyle    = 'voyager';
+let syncLock        = false;
+let panSyncLock     = false;
+let panSyncActive   = false;
+let nominalZoom     = 6;      // the zoom both maps are conceptually at
+let ringActive      = false;
+let ringUnit        = 'km';
+let ringHome        = null;
+let ringTarget      = null;
+let homeCenter      = null;
+let targetCenter    = null;
 let tileLayerHome, tileLayerTarget;
-let ringHome = null, ringTarget = null;
-let ringActive = false;
+const KM_PER_MI     = 1.60934;
 
 // ─────────────────────────────────────────
-// MAP INIT
+// MERCATOR CORRECTION
+// The Mercator scale factor at latitude φ is 1/cos(φ).
+// To show the same ground extent on both maps, we offset
+// the actual zoom of each map from the nominal zoom:
+//   actualZoom = nominalZoom + log2( cos(φ_reference) / cos(φ_map) )
+// We use the target map's latitude as reference (it stays at nominalZoom).
+// Home map gets the offset applied.
+// ─────────────────────────────────────────
+function mercatorScaleFactor(latDeg) {
+  return 1 / Math.cos(latDeg * Math.PI / 180);
+}
+
+function computeZoomOffset() {
+  const homeLat   = mapHome.getCenter().lat;
+  const targetLat = mapTarget.getCenter().lat;
+  const sfHome    = mercatorScaleFactor(homeLat);
+  const sfTarget  = mercatorScaleFactor(targetLat);
+  // offset = log2(sfHome / sfTarget)
+  // positive means home needs to zoom OUT (it appears bigger per pixel)
+  return Math.log2(sfHome / sfTarget);
+}
+
+function correctedHomeZoom() {
+  // Home map zooms OUT relative to nominal when its latitude is higher
+  return nominalZoom - computeZoomOffset();
+}
+
+function distortionPercent() {
+  return Math.abs(computeZoomOffset());
+}
+
+// ─────────────────────────────────────────
+// MAP INIT — home starts with offset applied
 // ─────────────────────────────────────────
 const mapHome = L.map('map-home', {
   center: [51.5, -0.12],
-  zoom: sharedZoom,
+  zoom: nominalZoom,
   zoomControl: true,
   attributionControl: false
 });
 
 const mapTarget = L.map('map-target', {
   center: [40.71, -74.01],
-  zoom: sharedZoom,
+  zoom: nominalZoom,
   zoomControl: true,
   attributionControl: false
 });
 
 function makeTileLayer(style) {
   const t = TILES[style];
-  const opts = { maxZoom: 19 };
+  const opts = { maxZoom: t.maxZoom };
   if (t.sub) opts.subdomains = t.sub;
   return L.tileLayer(t.url, opts);
 }
 
-tileLayerHome = makeTileLayer(currentStyle).addTo(mapHome);
+tileLayerHome   = makeTileLayer(currentStyle).addTo(mapHome);
 tileLayerTarget = makeTileLayer(currentStyle).addTo(mapTarget);
 
 // ─────────────────────────────────────────
-// ZOOM SYNC
+// SCALE LABEL & DISTORTION BADGE
 // ─────────────────────────────────────────
 function zoomToScale(z) {
-  const scales = {
+  const s = {
     1:'1:500M',2:'1:250M',3:'1:150M',4:'1:70M',5:'1:35M',
     6:'1:15M',7:'1:8M',8:'1:4M',9:'1:2M',10:'1:1M',
     11:'1:500k',12:'1:250k',13:'1:150k',14:'1:70k',15:'1:35k',
     16:'1:15k',17:'1:8k',18:'1:4k',19:'1:2k'
   };
-  return scales[z] || `Z${z}`;
+  return s[Math.round(z)] || `Z${Math.round(z)}`;
 }
 
-function updateZoomBadge(z) {
-  document.getElementById('zoom-badge').textContent = `Z: ${z}`;
-  document.getElementById('home-scale').textContent = zoomToScale(z);
-  document.getElementById('target-scale').textContent = zoomToScale(z);
+function updateUI() {
+  document.getElementById('zoom-badge').textContent = `Z: ${nominalZoom}`;
+  document.getElementById('home-scale').textContent   = zoomToScale(mapHome.getZoom());
+  document.getElementById('target-scale').textContent = zoomToScale(mapTarget.getZoom());
+
+  // Distortion badge
+  const pct = distortionPercent();
+  const badge = document.getElementById('distortion-badge');
+  if (pct > 0.15) { // more than ~10% visual difference
+    const percent = Math.round((Math.pow(2, pct) - 1) * 100);
+    badge.textContent = `⚠ ${percent}% lat distortion`;
+    badge.classList.add('show');
+  } else {
+    badge.classList.remove('show');
+  }
 }
 
-mapHome.on('zoomend', () => {
-  if (syncLock) return;
-  syncLock = true;
-  const z = mapHome.getZoom();
-  sharedZoom = z;
-  mapTarget.setZoom(z);
-  updateZoomBadge(z);
-  updateRings();
-  syncLock = false;
-});
+// ─────────────────────────────────────────
+// APPLY CORRECTION — recalculate home zoom
+// whenever either map moves or zoom changes
+// ─────────────────────────────────────────
+function applyLatitudeCorrection() {
+  const hz = correctedHomeZoom();
+  if (Math.abs(mapHome.getZoom() - hz) > 0.05) {
+    syncLock = true;
+    mapHome.setZoom(hz, { animate: false });
+    syncLock = false;
+  }
+  updateUI();
+  if (ringActive) drawRings();
+}
 
+// ─────────────────────────────────────────
+// ZOOM SYNC
+// ─────────────────────────────────────────
 mapTarget.on('zoomend', () => {
   if (syncLock) return;
   syncLock = true;
-  const z = mapTarget.getZoom();
-  sharedZoom = z;
-  mapHome.setZoom(z);
-  updateZoomBadge(z);
-  updateRings();
+  nominalZoom = mapTarget.getZoom();
+  applyLatitudeCorrection();
   syncLock = false;
 });
 
-updateZoomBadge(sharedZoom);
+mapHome.on('zoomend', () => {
+  if (syncLock) return;
+  // User zoomed home — treat as nominal zoom change
+  // Reverse-calculate nominal from corrected home zoom
+  syncLock = true;
+  const offset = computeZoomOffset();
+  nominalZoom = Math.round(mapHome.getZoom() + offset);
+  mapTarget.setZoom(nominalZoom, { animate: false });
+  applyLatitudeCorrection();
+  syncLock = false;
+});
+
+updateUI();
 
 // ─────────────────────────────────────────
 // PAN SYNC
 // ─────────────────────────────────────────
-// Store offsets so each map has its own centre but panning is relative
-let homeCenter = null;
-let targetCenter = null;
-
-function onMapMove(sourceMap, otherMap) {
+function onMapMove(src, other) {
   return function() {
-    if (!panSyncActive) return;
-    if (panSyncLock) return;
+    if (!panSyncActive || panSyncLock) return;
     panSyncLock = true;
-
-    const sourceNew = sourceMap.getCenter();
-
-    if (sourceMap === mapHome) {
-      const latDelta = sourceNew.lat - (homeCenter ? homeCenter.lat : sourceNew.lat);
-      const lngDelta = sourceNew.lng - (homeCenter ? homeCenter.lng : sourceNew.lng);
-      homeCenter = sourceNew;
+    const n = src.getCenter();
+    if (src === mapHome) {
+      const dlat = n.lat - (homeCenter ? homeCenter.lat : n.lat);
+      const dlng = n.lng - (homeCenter ? homeCenter.lng : n.lng);
+      homeCenter = n;
       if (targetCenter) {
-        const newTarget = L.latLng(targetCenter.lat + latDelta, targetCenter.lng + lngDelta);
-        targetCenter = newTarget;
-        otherMap.setView(newTarget, sharedZoom, { animate: false });
+        const nt = L.latLng(targetCenter.lat + dlat, targetCenter.lng + dlng);
+        targetCenter = nt;
+        other.setView(nt, other.getZoom(), { animate: false });
       } else {
-        targetCenter = otherMap.getCenter();
+        targetCenter = other.getCenter();
       }
     } else {
-      const latDelta = sourceNew.lat - (targetCenter ? targetCenter.lat : sourceNew.lat);
-      const lngDelta = sourceNew.lng - (targetCenter ? targetCenter.lng : sourceNew.lng);
-      targetCenter = sourceNew;
+      const dlat = n.lat - (targetCenter ? targetCenter.lat : n.lat);
+      const dlng = n.lng - (targetCenter ? targetCenter.lng : n.lng);
+      targetCenter = n;
       if (homeCenter) {
-        const newHome = L.latLng(homeCenter.lat + latDelta, homeCenter.lng + lngDelta);
-        homeCenter = newHome;
-        otherMap.setView(newHome, sharedZoom, { animate: false });
+        const nh = L.latLng(homeCenter.lat + dlat, homeCenter.lng + dlng);
+        homeCenter = nh;
+        other.setView(nh, other.getZoom(), { animate: false });
       } else {
-        homeCenter = otherMap.getCenter();
+        homeCenter = other.getCenter();
       }
     }
-
     panSyncLock = false;
   };
 }
@@ -859,90 +863,64 @@ function onMapMove(sourceMap, otherMap) {
 mapHome.on('move', onMapMove(mapHome, mapTarget));
 mapTarget.on('move', onMapMove(mapTarget, mapHome));
 
-// Seed centers after initial load
-mapHome.whenReady(() => { homeCenter = mapHome.getCenter(); });
+// Recalculate correction when either map finishes moving (lat may have changed)
+mapHome.on('moveend',   () => { applyLatitudeCorrection(); });
+mapTarget.on('moveend', () => { applyLatitudeCorrection(); });
+
+mapHome.whenReady(()   => { homeCenter   = mapHome.getCenter();   });
 mapTarget.whenReady(() => { targetCenter = mapTarget.getCenter(); });
 
 // ─────────────────────────────────────────
 // DISTANCE RINGS
+// Rings are drawn using L.circle (metres) which Leaflet
+// renders correctly in pixel space for each map's zoom+lat combo.
+// With latitude correction applied to the home map zoom, both
+// rings will appear the same visual size on screen.
 // ─────────────────────────────────────────
-let ringUnit = 'km'; // 'km' or 'mi'
-const KM_PER_MI = 1.60934;
-
-function ringRadiusMeters() {
-  const val = parseInt(ringSlider.value);
+function ringRadiusMetres() {
+  const val = parseInt(document.getElementById('ring-radius').value);
   return ringUnit === 'mi' ? val * KM_PER_MI * 1000 : val * 1000;
-}
-
-function formatRingVal(val) {
-  return `${val} ${ringUnit}`;
 }
 
 function drawRings() {
   if (!ringActive) return;
-
-  const hc = mapHome.getCenter();
-  const tc = mapTarget.getCenter();
-  const r = ringRadiusMeters();
-
-  const styleHome = {
-    color: '#4ade80', weight: 1.5,
-    fillColor: '#4ade80', fillOpacity: 0.06,
-    dashArray: '6 4', interactive: false
-  };
-  const styleTarget = {
-    color: '#60a5fa', weight: 1.5,
-    fillColor: '#60a5fa', fillOpacity: 0.06,
-    dashArray: '6 4', interactive: false
-  };
-
-  // Always remove and recreate to guarantee correct position
-  if (ringHome) { ringHome.remove(); ringHome = null; }
+  if (ringHome)   { ringHome.remove();   ringHome   = null; }
   if (ringTarget) { ringTarget.remove(); ringTarget = null; }
-
-  ringHome = L.circle(hc, { radius: r, ...styleHome }).addTo(mapHome);
-  ringTarget = L.circle(tc, { radius: r, ...styleTarget }).addTo(mapTarget);
+  const r = ringRadiusMetres();
+  ringHome   = L.circle(mapHome.getCenter(),   { radius: r, color: '#4ade80', weight: 1.5, fillColor: '#4ade80', fillOpacity: 0.06, dashArray: '6 4', interactive: false }).addTo(mapHome);
+  ringTarget = L.circle(mapTarget.getCenter(), { radius: r, color: '#60a5fa', weight: 1.5, fillColor: '#60a5fa', fillOpacity: 0.06, dashArray: '6 4', interactive: false }).addTo(mapTarget);
 }
 
 function clearRings() {
-  if (ringHome) { ringHome.remove(); ringHome = null; }
+  if (ringHome)   { ringHome.remove();   ringHome   = null; }
   if (ringTarget) { ringTarget.remove(); ringTarget = null; }
 }
 
-function updateRings() {
-  if (ringActive) drawRings();
-}
-
-// Redraw rings on moveend only (not move — avoids flicker and style-change spurious events)
-mapHome.on('moveend', () => { if (ringActive) drawRings(); });
+mapHome.on('moveend',   () => { if (ringActive) drawRings(); });
 mapTarget.on('moveend', () => { if (ringActive) drawRings(); });
 
 // Ring controls
-const ringSlider = document.getElementById('ring-radius');
-const ringVal = document.getElementById('ring-val');
+const ringSlider  = document.getElementById('ring-radius');
+const ringValEl   = document.getElementById('ring-val');
 const ringUnitBtn = document.getElementById('ring-unit');
 
 ringSlider.addEventListener('input', () => {
-  ringVal.textContent = formatRingVal(ringSlider.value);
+  ringValEl.textContent = `${ringSlider.value} ${ringUnit}`;
   if (ringActive) drawRings();
 });
 
 ringUnitBtn.addEventListener('click', () => {
-  const currentVal = parseInt(ringSlider.value);
+  const v = parseInt(ringSlider.value);
   if (ringUnit === 'km') {
     ringUnit = 'mi';
     ringUnitBtn.textContent = 'km';
-    // Convert slider value km→mi
-    const inMi = Math.round(currentVal / KM_PER_MI);
-    ringSlider.value = Math.max(1, inMi);
+    ringSlider.value = Math.max(1, Math.round(v / KM_PER_MI));
   } else {
     ringUnit = 'km';
     ringUnitBtn.textContent = 'mi';
-    // Convert slider value mi→km
-    const inKm = Math.round(currentVal * KM_PER_MI);
-    ringSlider.value = Math.min(500, inKm);
+    ringSlider.value = Math.min(500, Math.round(v * KM_PER_MI));
   }
-  ringVal.textContent = formatRingVal(ringSlider.value);
+  ringValEl.textContent = `${ringSlider.value} ${ringUnit}`;
   if (ringActive) drawRings();
 });
 
@@ -960,43 +938,64 @@ document.querySelectorAll('.style-opt').forEach(btn => {
   btn.addEventListener('click', () => {
     const style = btn.dataset.style;
     if (style === currentStyle) return;
-    currentStyle = style;
 
+    // Terrain maxZoom warning
+    if (style === 'terrain' && nominalZoom > 17) {
+      showStatus('home-status', 'Terrain max zoom is Z:17');
+      showStatus('target-status', 'Terrain max zoom is Z:17');
+      nominalZoom = 17;
+      mapTarget.setZoom(17);
+      applyLatitudeCorrection();
+    }
+
+    currentStyle = style;
     document.querySelectorAll('.style-opt').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-
     tileLayerHome.remove();
     tileLayerTarget.remove();
-    tileLayerHome = makeTileLayer(style).addTo(mapHome);
+    tileLayerHome   = makeTileLayer(style).addTo(mapHome);
     tileLayerTarget = makeTileLayer(style).addTo(mapTarget);
-    // Redraw rings on top of new tiles
     if (ringActive) drawRings();
   });
+});
+
+// Terrain zoom cap
+mapHome.on('zoomend', () => {
+  if (currentStyle === 'terrain' && mapHome.getZoom() > 17) {
+    nominalZoom = 17;
+    mapTarget.setZoom(17, { animate: false });
+    applyLatitudeCorrection();
+    showStatus('home-status', 'Terrain max zoom Z:17');
+  }
+});
+mapTarget.on('zoomend', () => {
+  if (currentStyle === 'terrain' && mapTarget.getZoom() > 17) {
+    nominalZoom = 17;
+    mapTarget.setZoom(17, { animate: false });
+    applyLatitudeCorrection();
+    showStatus('target-status', 'Terrain max zoom Z:17');
+  }
 });
 
 // ─────────────────────────────────────────
 // PANEL TOGGLES
 // ─────────────────────────────────────────
-const panels = { ring: 'ring-panel', style: 'style-panel', pins: 'pins-panel' };
+const PANELS = { ring: 'ring-panel', style: 'style-panel', pins: 'pins-panel' };
 
-function togglePanel(panelId, forceState) {
-  const el = document.getElementById(panelId);
-  const isOpen = el.classList.contains('open');
-  const shouldOpen = forceState !== undefined ? forceState : !isOpen;
-
-  // Close others
-  Object.values(panels).forEach(id => {
-    if (id !== panelId) document.getElementById(id).classList.remove('open');
+function togglePanel(id, force) {
+  const el = document.getElementById(id);
+  const open = force !== undefined ? force : !el.classList.contains('open');
+  Object.values(PANELS).forEach(pid => {
+    if (pid !== id) document.getElementById(pid).classList.remove('open');
   });
-
-  el.classList.toggle('open', shouldOpen);
+  el.classList.toggle('open', open);
 }
 
 document.getElementById('btn-pan').addEventListener('click', () => {
   panSyncActive = !panSyncActive;
   document.getElementById('btn-pan').classList.toggle('active', panSyncActive);
   if (panSyncActive) {
-    homeCenter = mapHome.getCenter();
+    homeCenter   = mapHome.getCenter();
     targetCenter = mapTarget.getCenter();
   }
 });
@@ -1009,14 +1008,14 @@ document.getElementById('btn-ring').addEventListener('click', () => {
 });
 
 document.getElementById('btn-style').addEventListener('click', () => {
-  const isOpen = document.getElementById('style-panel').classList.contains('open');
-  document.getElementById('btn-style').classList.toggle('active', !isOpen);
+  const open = document.getElementById('style-panel').classList.contains('open');
+  document.getElementById('btn-style').classList.toggle('active', !open);
   togglePanel('style-panel');
 });
 
 document.getElementById('btn-pins').addEventListener('click', () => {
-  const isOpen = document.getElementById('pins-panel').classList.contains('open');
-  document.getElementById('btn-pins').classList.toggle('active', !isOpen);
+  const open = document.getElementById('pins-panel').classList.contains('open');
+  document.getElementById('btn-pins').classList.toggle('active', !open);
   togglePanel('pins-panel');
   renderPins();
 });
@@ -1024,220 +1023,153 @@ document.getElementById('btn-pins').addEventListener('click', () => {
 // ─────────────────────────────────────────
 // FULLSCREEN
 // ─────────────────────────────────────────
-const app = document.getElementById('app');
+const app    = document.getElementById('app');
 const fsExit = document.getElementById('fs-exit');
-const btnFS = document.getElementById('btn-fs');
+const btnFS  = document.getElementById('btn-fs');
 
 function enterFullscreen() {
   app.classList.add('fullscreen');
-  fsExit.style.display = 'flex';
   btnFS.classList.add('active');
-  setTimeout(() => {
-    mapHome.invalidateSize();
-    mapTarget.invalidateSize();
-  }, 50);
+  setTimeout(() => { mapHome.invalidateSize(); mapTarget.invalidateSize(); }, 50);
 }
 
 function exitFullscreen() {
   app.classList.remove('fullscreen');
-  fsExit.style.display = 'none';
   btnFS.classList.remove('active');
-  setTimeout(() => {
-    mapHome.invalidateSize();
-    mapTarget.invalidateSize();
-  }, 50);
+  setTimeout(() => { mapHome.invalidateSize(); mapTarget.invalidateSize(); }, 50);
 }
 
-btnFS.addEventListener('click', () => {
-  if (app.classList.contains('fullscreen')) exitFullscreen();
-  else enterFullscreen();
-});
-
+btnFS.addEventListener('click',  () => { app.classList.contains('fullscreen') ? exitFullscreen() : enterFullscreen(); });
 fsExit.addEventListener('click', exitFullscreen);
-
-// Native fullscreen API on desktop
-document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement && app.classList.contains('fullscreen')) {
-    exitFullscreen();
-  }
-});
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) exitFullscreen(); });
 
 // ─────────────────────────────────────────
 // PINS
 // ─────────────────────────────────────────
 let pins = JSON.parse(localStorage.getItem('sm_pins') || '[]');
 
-function savePins() {
-  try { localStorage.setItem('sm_pins', JSON.stringify(pins)); } catch(e) {}
-}
+function savePins() { try { localStorage.setItem('sm_pins', JSON.stringify(pins)); } catch(e) {} }
 
 function renderPins() {
   const list = document.getElementById('pins-list');
   list.innerHTML = '';
-
   if (!pins.length) {
-    const empty = document.createElement('span');
-    empty.style.cssText = 'font-size:11px;color:var(--muted);padding:0 6px;white-space:nowrap;';
-    empty.textContent = 'No saved locations';
-    list.appendChild(empty);
+    const e = document.createElement('span');
+    e.style.cssText = 'font-size:11px;color:var(--muted);padding:0 6px;white-space:nowrap;';
+    e.textContent = 'No saved locations';
+    list.appendChild(e);
     return;
   }
-
   pins.forEach((pin, i) => {
-    const chip = document.createElement('div');
-    chip.className = 'pin-chip';
-    chip.innerHTML = `
-      <span class="pin-dot" style="background:${pin.panel === 'home' ? 'var(--accent)' : 'var(--accent2)'}"></span>
-      <span class="pin-label">${pin.label}</span>
-      <span class="pin-del">×</span>
-    `;
-    // Click to navigate
-    chip.addEventListener('click', (e) => {
-      if (e.target.classList.contains('pin-del')) {
-        pins.splice(i, 1);
-        savePins();
-        renderPins();
-        return;
-      }
-      const targetMap = pin.panel === 'home' ? mapHome : mapTarget;
-      targetMap.setView([pin.lat, pin.lng], sharedZoom);
-      if (pin.panel === 'home') {
-        homeCenter = L.latLng(pin.lat, pin.lng);
-        document.getElementById('home-input').value = pin.label;
-      } else {
-        targetCenter = L.latLng(pin.lat, pin.lng);
-        document.getElementById('target-input').value = pin.label;
-      }
+    const c = document.createElement('div');
+    c.className = 'pin-chip';
+    c.innerHTML = `<span class="pin-dot" style="background:${pin.panel==='home'?'var(--accent)':'var(--accent2)'}"></span><span class="pin-label">${pin.label}</span><span class="pin-del">×</span>`;
+    c.addEventListener('click', e => {
+      if (e.target.classList.contains('pin-del')) { pins.splice(i,1); savePins(); renderPins(); return; }
+      const m = pin.panel==='home' ? mapHome : mapTarget;
+      m.setView([pin.lat, pin.lng], m.getZoom());
+      if (pin.panel==='home') { homeCenter=L.latLng(pin.lat,pin.lng); document.getElementById('home-input').value=pin.label; }
+      else { targetCenter=L.latLng(pin.lat,pin.lng); document.getElementById('target-input').value=pin.label; }
     });
-    list.appendChild(chip);
+    list.appendChild(c);
   });
 }
 
 function pinCurrentLocation(panelId) {
-  const map = panelId === 'home' ? mapHome : mapTarget;
-  const input = document.getElementById(panelId + '-input');
-  const label = (input.value || 'Location').split(',')[0].trim().slice(0, 28);
-  const center = map.getCenter();
-
-  pins.push({ label, lat: center.lat, lng: center.lng, panel: panelId });
-  savePins();
-  renderPins();
-
-  const btn = document.getElementById(panelId + '-pin-btn');
+  const map = panelId==='home' ? mapHome : mapTarget;
+  const inp = document.getElementById(panelId+'-input');
+  const label = (inp.value||'Location').split(',')[0].trim().slice(0,28);
+  pins.push({ label, lat: map.getCenter().lat, lng: map.getCenter().lng, panel: panelId });
+  savePins(); renderPins();
+  const btn = document.getElementById(panelId+'-pin-btn');
   btn.classList.add('pinned');
   setTimeout(() => btn.classList.remove('pinned'), 1500);
 }
 
-document.getElementById('home-pin-btn').addEventListener('click', () => pinCurrentLocation('home'));
+document.getElementById('home-pin-btn').addEventListener('click',   () => pinCurrentLocation('home'));
 document.getElementById('target-pin-btn').addEventListener('click', () => pinCurrentLocation('target'));
-
 renderPins();
+
+// ─────────────────────────────────────────
+// STATUS TOAST
+// ─────────────────────────────────────────
+function showStatus(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 2500);
+}
 
 // ─────────────────────────────────────────
 // GEOCODER
 // ─────────────────────────────────────────
 async function photonSearch(q) {
-  const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lang=en`;
-  const r = await fetch(url);
-  const data = await r.json();
-  return data.features.map(f => ({
+  const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lang=en`);
+  const d = await r.json();
+  return d.features.map(f => ({
     lat: f.geometry.coordinates[1],
     lon: f.geometry.coordinates[0],
-    display_name: [
-      f.properties.name,
-      f.properties.city || f.properties.county,
-      f.properties.state,
-      f.properties.country
-    ].filter(Boolean).join(', ')
+    display_name: [f.properties.name, f.properties.city||f.properties.county, f.properties.state, f.properties.country].filter(Boolean).join(', ')
   }));
 }
 
-let debounceTimers = {};
+let dbT = {};
 
-function setupSearch(inputId, btnId, acId, mapObj, statusId, panelKey) {
-  const input = document.getElementById(inputId);
+function setupSearch(inpId, btnId, acId, mapObj, statusId, pk) {
+  const inp = document.getElementById(inpId);
   const btn = document.getElementById(btnId);
-  const ac = document.getElementById(acId);
-  const status = document.getElementById(statusId);
-  let results = [];
+  const ac  = document.getElementById(acId);
 
-  function showStatus(msg) {
-    status.textContent = msg;
-    status.classList.add('show');
-    clearTimeout(status._t);
-    status._t = setTimeout(() => status.classList.remove('show'), 2000);
-  }
-
-  function closeAC() {
-    ac.innerHTML = '';
-    ac.classList.remove('open');
-  }
+  function closeAC() { ac.innerHTML=''; ac.classList.remove('open'); }
 
   function flyTo(item) {
-    const lat = parseFloat(item.lat);
-    const lon = parseFloat(item.lon);
-    const center = L.latLng(lat, lon);
-    mapObj.setView(center, sharedZoom);
-    // Update tracked center
-    if (panelKey === 'home') homeCenter = center;
-    else targetCenter = center;
-    input.value = item.display_name.split(',').slice(0, 3).join(', ');
+    const ct = L.latLng(parseFloat(item.lat), parseFloat(item.lon));
+    mapObj.setView(ct, mapObj.getZoom());
+    if (pk==='home') homeCenter=ct; else targetCenter=ct;
+    inp.value = item.display_name.split(',').slice(0,3).join(', ');
     closeAC();
+    applyLatitudeCorrection();
     if (ringActive) drawRings();
   }
 
   async function doSearch(q) {
     if (!q.trim()) return;
-    showStatus('Searching…');
+    showStatus(statusId, 'Searching…');
     try {
-      results = await photonSearch(q);
-      if (!results.length) { showStatus('No results'); return; }
-      if (results.length === 1) { flyTo(results[0]); return; }
-      ac.innerHTML = '';
-      results.forEach((item) => {
+      const res = await photonSearch(q);
+      if (!res.length) { showStatus(statusId, 'No results'); return; }
+      if (res.length===1) { flyTo(res[0]); return; }
+      ac.innerHTML='';
+      res.forEach(item => {
         const el = document.createElement('div');
-        el.className = 'ac-item';
-        el.textContent = item.display_name.split(',').slice(0, 4).join(', ');
-        el.addEventListener('click', () => flyTo(item));
+        el.className='ac-item';
+        el.textContent=item.display_name.split(',').slice(0,4).join(', ');
+        el.addEventListener('click', ()=>flyTo(item));
         ac.appendChild(el);
       });
       ac.classList.add('open');
-      status.classList.remove('show');
-    } catch(e) {
-      showStatus('Error — check connection');
-    }
+    } catch(e) { showStatus(statusId, 'Error — check connection'); }
   }
 
-  input.addEventListener('input', () => {
-    clearTimeout(debounceTimers[inputId]);
-    const q = input.value;
-    if (q.length < 3) { closeAC(); return; }
-    debounceTimers[inputId] = setTimeout(() => doSearch(q), 500);
+  inp.addEventListener('input', () => {
+    clearTimeout(dbT[inpId]);
+    if (inp.value.length<3) { closeAC(); return; }
+    dbT[inpId] = setTimeout(()=>doSearch(inp.value), 500);
   });
-
-  input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { clearTimeout(debounceTimers[inputId]); closeAC(); doSearch(input.value); }
-    if (e.key === 'Escape') closeAC();
+  inp.addEventListener('keydown', e => {
+    if (e.key==='Enter') { clearTimeout(dbT[inpId]); closeAC(); doSearch(inp.value); }
+    if (e.key==='Escape') closeAC();
   });
-
-  btn.addEventListener('click', () => { closeAC(); doSearch(input.value); });
-
-  document.addEventListener('click', e => {
-    if (!ac.contains(e.target) && e.target !== input) closeAC();
-  });
+  btn.addEventListener('click', () => { closeAC(); doSearch(inp.value); });
+  document.addEventListener('click', e => { if (!ac.contains(e.target)&&e.target!==inp) closeAC(); });
 }
 
 setupSearch('home-input',   'home-btn',   'home-ac',   mapHome,   'home-status',   'home');
 setupSearch('target-input', 'target-btn', 'target-ac', mapTarget, 'target-status', 'target');
 
-// ─────────────────────────────────────────
-// RESIZE HANDLER
-// ─────────────────────────────────────────
 window.addEventListener('resize', () => {
-  setTimeout(() => {
-    mapHome.invalidateSize();
-    mapTarget.invalidateSize();
-  }, 150);
+  setTimeout(() => { mapHome.invalidateSize(); mapTarget.invalidateSize(); }, 150);
 });
 </script>
 
