@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- ScaleMatch v3.0.0 | 2026-04-28 | MapLibre GL JS globe projection, true spherical rendering, synced zoom -->
+<!-- ScaleMatch v3.0.1 | 2026-04-28 | Fix: zoom controls top-left, robust rings, larger buttons -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ScaleMatch v3</title>
+<title>ScaleMatch v3.0.1</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
@@ -21,7 +21,7 @@
     --text:      #dde2ed;
     --muted:     #424860;
     --bright:    #7a85a0;
-    --panel-h:   52px;
+    --panel-h:   58px;
     --safe-top:    env(safe-area-inset-top,    0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-left:   env(safe-area-inset-left,   0px);
@@ -135,10 +135,10 @@
   /* ── TOOLBAR BUTTONS ── */
   .tb-btn {
     flex-shrink: 0;
-    width: 50px;
-    height: 42px;
+    width: 56px;
+    height: 46px;
     border: 1px solid var(--border2);
-    border-radius: 6px;
+    border-radius: 7px;
     background: var(--surface2);
     color: var(--bright);
     cursor: pointer;
@@ -146,16 +146,16 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
-    font-size: 15px;
+    gap: 3px;
+    font-size: 17px;
     transition: color 0.15s, border-color 0.15s, background 0.15s;
     -webkit-tap-highlight-color: transparent;
   }
 
   .tb-btn .tb-label {
-    font-size: 7px;
+    font-size: 9px;
     font-weight: 500;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     line-height: 1;
     color: inherit;
@@ -544,7 +544,7 @@
     display: none;
     position: fixed;
     top: calc(var(--safe-top) + 12px);
-    right: calc(var(--safe-right) + 12px);
+    left: calc(var(--safe-left) + 12px);
     z-index: 10000;
     width: 54px;
     height: 46px;
@@ -748,8 +748,8 @@ const mapTarget = new maplibregl.Map({
   attributionControl: false
 });
 
-mapHome.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-mapTarget.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+mapHome.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+mapTarget.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
 
 // ─────────────────────────────────────────
 // ZOOM SYNC — always in sync, independent pan
