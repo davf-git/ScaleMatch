@@ -772,7 +772,7 @@ function updateUI() {
   const badge = document.getElementById('distortion-badge');
   if (pct > 0.15) { // more than ~10% visual difference
     const percent = Math.round((Math.pow(2, pct) - 1) * 100);
-    badge.textContent = `⚠ ${percent}% lat distortion`;
+    badge.textContent = `⟳ ${percent}% Mercator lat. corrected`;
     badge.classList.add('show');
   } else {
     badge.classList.remove('show');
