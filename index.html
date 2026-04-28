@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ScaleMatch v2.5.2 | 2026-04-28 | Mercator latitude correction, fixed exit button, version/credit display -->
+<!-- ScaleMatch v2.5.3 | 2026-04-28 | Mercator latitude correction, fixed exit button, version/credit display -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -578,7 +578,7 @@
   <!-- TOPBAR -->
   <div id="topbar">
     <div id="wordmark">
-      <div id="wordmark-title">Scale<span>Match</span> <span style="color:var(--muted);font-size:10px;font-weight:500;letter-spacing:0.05em;">v2.5.2</span></div>
+      <div id="wordmark-title">Scale<span>Match</span> <span style="color:var(--muted);font-size:10px;font-weight:500;letter-spacing:0.05em;">v2.5.3</span></div>
       <div id="wordmark-sub">© Dave Forman</div>
     </div>
     <div class="topbar-gap"></div>
@@ -808,16 +808,31 @@ function applyLatitudeCorrection() {
 // ─────────────────────────────────────────
 mapTarget.on('zoomend', () => {
   if (correcting) return;
+  correcting = true;
   nominalZoom = mapTarget.getZoom();
-  applyLatitudeCorrection();
+  // Apply corrected zoom to home only
+  const hz = nominalZoom - computeZoomOffset();
+  if (Math.abs(mapHome.getZoom() - hz) > 0.05) {
+    mapHome.setZoom(hz, { animate: false });
+  }
+  correcting = false;
+  updateUI();
+  if (ringActive) drawRings();
 });
 
 mapHome.on('zoomend', () => {
   if (correcting) return;
+  correcting = true;
   // Reverse-calculate nominal from home's corrected zoom
   const offset = computeZoomOffset();
   nominalZoom = Math.round(mapHome.getZoom() + offset);
-  applyLatitudeCorrection();
+  // Sync target to nominal — do NOT touch home zoom here
+  if (Math.abs(mapTarget.getZoom() - nominalZoom) > 0.05) {
+    mapTarget.setZoom(nominalZoom, { animate: false });
+  }
+  correcting = false;
+  updateUI();
+  if (ringActive) drawRings();
 });
 
 updateUI();
