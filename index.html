@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ScaleMatch v2.5.3 | 2026-04-28 | Mercator latitude correction, fixed exit button, version/credit display -->
+<!-- ScaleMatch v2.5.4 | 2026-04-28 | Mercator latitude correction, fixed exit button, version/credit display -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -578,7 +578,7 @@
   <!-- TOPBAR -->
   <div id="topbar">
     <div id="wordmark">
-      <div id="wordmark-title">Scale<span>Match</span> <span style="color:var(--muted);font-size:10px;font-weight:500;letter-spacing:0.05em;">v2.5.3</span></div>
+      <div id="wordmark-title">Scale<span>Match</span> <span style="color:var(--muted);font-size:10px;font-weight:500;letter-spacing:0.05em;">v2.5.4</span></div>
       <div id="wordmark-sub">© Dave Forman</div>
     </div>
     <div class="topbar-gap"></div>
@@ -772,7 +772,7 @@ function updateUI() {
   const badge = document.getElementById('distortion-badge');
   if (pct > 0.15) { // more than ~10% visual difference
     const percent = Math.round((Math.pow(2, pct) - 1) * 100);
-    badge.textContent = `⟳ ${percent}% Mercator lat. corrected`;
+    badge.textContent = `⚠ ${percent}% lat distortion`;
     badge.classList.add('show');
   } else {
     badge.classList.remove('show');
@@ -1147,11 +1147,14 @@ function setupSearch(inpId, btnId, acId, mapObj, statusId, pk) {
 
   function flyTo(item) {
     const ct = L.latLng(parseFloat(item.lat), parseFloat(item.lon));
-    mapObj.setView(ct, mapObj.getZoom());
+    correcting = true;
+    mapObj.setView(ct, mapObj.getZoom(), { animate: false });
+    correcting = false;
     if (pk==='home') homeCenter=ct; else targetCenter=ct;
     inp.value = item.display_name.split(',').slice(0,3).join(', ');
     closeAC();
-    applyLatitudeCorrection();
+    // Recalculate correction after navigation — latitude has changed
+    setTimeout(() => { applyLatitudeCorrection(); }, 50);
     if (ringActive) drawRings();
   }
 
