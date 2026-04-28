@@ -780,16 +780,25 @@ function updateUI() {
 }
 
 // ─────────────────────────────────────────
-// APPLY CORRECTION — recalculate home zoom
-// whenever either map moves or zoom changes
+// APPLY CORRECTION — called after any zoom/move
+// Target always stays at nominalZoom.
+// Home is offset by the Mercator difference.
 // ─────────────────────────────────────────
+let correcting = false;
+
 function applyLatitudeCorrection() {
-  const hz = correctedHomeZoom();
-  if (Math.abs(mapHome.getZoom() - hz) > 0.05) {
-    syncLock = true;
-    mapHome.setZoom(hz, { animate: false });
-    syncLock = false;
+  if (correcting) return;
+  const hz = nominalZoom - computeZoomOffset();
+  const tz = nominalZoom;
+  correcting = true;
+  // Only update if meaningfully different to avoid infinite loops
+  if (Math.abs(mapTarget.getZoom() - tz) > 0.05) {
+    mapTarget.setZoom(tz, { animate: false });
   }
+  if (Math.abs(mapHome.getZoom() - hz) > 0.05) {
+    mapHome.setZoom(hz, { animate: false });
+  }
+  correcting = false;
   updateUI();
   if (ringActive) drawRings();
 }
@@ -798,23 +807,17 @@ function applyLatitudeCorrection() {
 // ZOOM SYNC
 // ─────────────────────────────────────────
 mapTarget.on('zoomend', () => {
-  if (syncLock) return;
-  syncLock = true;
+  if (correcting) return;
   nominalZoom = mapTarget.getZoom();
   applyLatitudeCorrection();
-  syncLock = false;
 });
 
 mapHome.on('zoomend', () => {
-  if (syncLock) return;
-  // User zoomed home — treat as nominal zoom change
-  // Reverse-calculate nominal from corrected home zoom
-  syncLock = true;
+  if (correcting) return;
+  // Reverse-calculate nominal from home's corrected zoom
   const offset = computeZoomOffset();
   nominalZoom = Math.round(mapHome.getZoom() + offset);
-  mapTarget.setZoom(nominalZoom, { animate: false });
   applyLatitudeCorrection();
-  syncLock = false;
 });
 
 updateUI();
@@ -857,9 +860,9 @@ function onMapMove(src, other) {
 mapHome.on('move', onMapMove(mapHome, mapTarget));
 mapTarget.on('move', onMapMove(mapTarget, mapHome));
 
-// Recalculate correction when either map finishes moving (lat may have changed)
-mapHome.on('moveend',   () => { applyLatitudeCorrection(); });
-mapTarget.on('moveend', () => { applyLatitudeCorrection(); });
+// After panning, latitude may have changed — recalculate correction
+mapHome.on('moveend',   () => { if (!correcting) applyLatitudeCorrection(); });
+mapTarget.on('moveend', () => { if (!correcting) applyLatitudeCorrection(); });
 
 mapHome.whenReady(()   => { homeCenter   = mapHome.getCenter();   });
 mapTarget.whenReady(() => { targetCenter = mapTarget.getCenter(); });
