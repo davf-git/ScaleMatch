@@ -1,631 +1,104 @@
 <!DOCTYPE html>
 
-<!-- ScaleMatch v3.0.2 | 2026-04-28 | Fix: zoom controls top-left, robust rings, larger buttons -->
+<!-- ScaleMatch v3.1.0 | 2026-04-29 | Rings removed -->
 
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>ScaleMatch v3.0.2</title>
+<title>ScaleMatch v3.1.0</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl.js"></script>
 <link href="https://unpkg.com/maplibre-gl@5.1.0/dist/maplibre-gl.css" rel="stylesheet">
 <style>
   :root {
-    --bg:        #080a0f;
-    --surface:   #0e1118;
-    --surface2:  #141720;
-    --border:    #1e222e;
-    --border2:   #2a2f3f;
-    --accent:    #39e0a0;
-    --accent2:   #4fa8f5;
-    --warn:      #f0a030;
-    --text:      #dde2ed;
-    --muted:     #424860;
-    --bright:    #7a85a0;
-    --panel-h:   58px;
-    --safe-top:    env(safe-area-inset-top,    0px);
-    --safe-bottom: env(safe-area-inset-bottom, 0px);
-    --safe-left:   env(safe-area-inset-left,   0px);
-    --safe-right:  env(safe-area-inset-right,  0px);
+    --bg:#080a0f; --surface:#0e1118; --surface2:#141720; --border:#1e222e; --border2:#2a2f3f;
+    --accent:#39e0a0; --accent2:#4fa8f5; --text:#dde2ed; --muted:#424860; --bright:#7a85a0;
+    --panel-h:58px;
+    --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+    --safe-left:env(safe-area-inset-left,0px); --safe-right:env(safe-area-inset-right,0px);
   }
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-height: 100%;
-background: var(–bg);
-color: var(–text);
-font-family: ‘DM Mono’, monospace;
-overflow: hidden;
--webkit-tap-highlight-color: transparent;
-user-select: none;
--webkit-user-select: none;
-}
-
-#app {
-display: flex;
-flex-direction: column;
-height: 100dvh;
-padding-top:    var(–safe-top);
-padding-bottom: var(–safe-bottom);
-padding-left:   var(–safe-left);
-padding-right:  var(–safe-right);
-}
-
-/* ── TOPBAR ── */
-#topbar {
-flex-shrink: 0;
-height: var(–panel-h);
-background: var(–surface);
-border-bottom: 1px solid var(–border);
-display: flex;
-align-items: center;
-padding: 0 10px;
-gap: 7px;
-z-index: 1000;
-}
-
-#wordmark {
-display: flex;
-flex-direction: column;
-flex-shrink: 0;
-gap: 1px;
-}
-
-#wordmark-title {
-font-family: ‘Syne’, sans-serif;
-font-size: 14px;
-font-weight: 800;
-letter-spacing: 0.04em;
-color: var(–accent);
-line-height: 1;
-text-transform: uppercase;
-}
-
-#wordmark-title .t2 { color: var(–accent2); }
-#wordmark-title .ver {
-color: var(–muted);
-font-family: ‘DM Mono’, monospace;
-font-size: 9px;
-font-weight: 400;
-letter-spacing: 0.06em;
-margin-left: 4px;
-}
-
-#wordmark-sub {
-font-size: 8px;
-font-weight: 500;
-letter-spacing: 0.1em;
-color: var(–muted);
-text-transform: uppercase;
-}
-
-.topbar-gap { flex: 1; }
-
-#zoom-badge {
-font-size: 11px;
-font-weight: 500;
-letter-spacing: 0.08em;
-color: var(–bright);
-background: var(–bg);
-border: 1px solid var(–border2);
-border-radius: 3px;
-padding: 3px 8px;
-white-space: nowrap;
-flex-shrink: 0;
-min-width: 54px;
-text-align: center;
-font-family: ‘DM Mono’, monospace;
-}
-
-/* ── GLOBE BADGE ── */
-#globe-badge {
-font-size: 9px;
-font-weight: 500;
-letter-spacing: 0.08em;
-border-radius: 3px;
-padding: 3px 7px;
-white-space: nowrap;
-flex-shrink: 0;
-border: 1px solid var(–accent);
-color: var(–accent);
-background: rgba(57,224,160,0.06);
-text-transform: uppercase;
-}
-
-/* ── TOOLBAR BUTTONS ── */
-.tb-btn {
-flex-shrink: 0;
-width: 56px;
-height: 46px;
-border: 1px solid var(–border2);
-border-radius: 7px;
-background: var(–surface2);
-color: var(–bright);
-cursor: pointer;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-gap: 3px;
-font-size: 17px;
-transition: color 0.15s, border-color 0.15s, background 0.15s;
--webkit-tap-highlight-color: transparent;
-}
-
-.tb-btn .tb-label {
-font-size: 9px;
-font-weight: 500;
-letter-spacing: 0.08em;
-text-transform: uppercase;
-line-height: 1;
-color: inherit;
-font-family: ‘DM Mono’, monospace;
-}
-
-.tb-btn:active { opacity: 0.65; }
-.tb-btn.active { color: var(–accent); border-color: var(–accent); background: rgba(57,224,160,0.07); }
-
-/* ── COLLAPSIBLE PANELS ── */
-.slide-panel {
-flex-shrink: 0;
-overflow: hidden;
-max-height: 0;
-transition: max-height 0.22s ease;
-background: var(–surface);
-border-bottom: 0px solid var(–border);
-}
-
-.slide-panel.open {
-max-height: 54px;
-border-bottom: 1px solid var(–border);
-}
-
-.panel-inner {
-height: 54px;
-display: flex;
-align-items: center;
-padding: 0 12px;
-gap: 10px;
-}
-
-.panel-inner label {
-font-size: 9px;
-font-weight: 500;
-letter-spacing: 0.12em;
-color: var(–muted);
-text-transform: uppercase;
-flex-shrink: 0;
-font-family: ‘DM Mono’, monospace;
-}
-
-/* ── RING PANEL ── */
-#ring-radius {
-flex: 1;
-max-width: 180px;
-height: 3px;
--webkit-appearance: none;
-appearance: none;
-background: var(–border2);
-border-radius: 2px;
-outline: none;
-cursor: pointer;
-}
-
-#ring-radius::-webkit-slider-thumb {
--webkit-appearance: none;
-width: 18px;
-height: 18px;
-border-radius: 50%;
-background: var(–accent);
-cursor: pointer;
-border: 2px solid var(–bg);
-}
-
-#ring-val {
-font-size: 12px;
-font-weight: 500;
-color: var(–text);
-min-width: 52px;
-text-align: right;
-flex-shrink: 0;
-font-family: ‘DM Mono’, monospace;
-}
-
-.ring-unit-btn {
-flex-shrink: 0;
-height: 26px;
-padding: 0 10px;
-border: 1px solid var(–accent);
-border-radius: 4px;
-background: none;
-color: var(–accent);
-font-size: 10px;
-font-weight: 500;
-letter-spacing: 0.1em;
-cursor: pointer;
-text-transform: uppercase;
-font-family: ‘DM Mono’, monospace;
-}
-
-.panel-clear-btn {
-flex-shrink: 0;
-height: 26px;
-padding: 0 10px;
-border: 1px solid var(–border2);
-border-radius: 4px;
-background: none;
-color: var(–muted);
-font-size: 10px;
-font-weight: 500;
-letter-spacing: 0.1em;
-cursor: pointer;
-text-transform: uppercase;
-font-family: ‘DM Mono’, monospace;
-}
-
-/* ── STYLE PANEL ── */
-.style-opt {
-height: 28px;
-padding: 0 11px;
-border: 1px solid var(–border2);
-border-radius: 4px;
-background: none;
-color: var(–muted);
-font-size: 10px;
-font-weight: 500;
-letter-spacing: 0.1em;
-cursor: pointer;
-text-transform: uppercase;
-transition: color 0.15s, border-color 0.15s, background 0.15s;
-white-space: nowrap;
-font-family: ‘DM Mono’, monospace;
-}
-
-.style-opt.active {
-color: var(–accent2);
-border-color: var(–accent2);
-background: rgba(79,168,245,0.07);
-}
-
-/* ── PINS PANEL ── */
-#pins-inner {
-height: 54px;
-display: flex;
-align-items: center;
-padding: 0 10px;
-gap: 6px;
-overflow-x: auto;
--webkit-overflow-scrolling: touch;
-scrollbar-width: none;
-}
-
-#pins-inner::-webkit-scrollbar { display: none; }
-
-.pin-chip {
-flex-shrink: 0;
-height: 30px;
-padding: 0 10px;
-border: 1px solid var(–border2);
-border-radius: 15px;
-background: var(–bg);
-color: var(–text);
-font-size: 10px;
-cursor: pointer;
-display: flex;
-align-items: center;
-gap: 5px;
-white-space: nowrap;
-max-width: 140px;
-font-family: ‘DM Mono’, monospace;
-}
-
-.pin-chip .pin-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.pin-chip .pin-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pin-chip .pin-del { flex-shrink: 0; color: var(–muted); font-size: 13px; line-height: 1; }
-
-/* ── MAPS CONTAINER ── */
-#maps-container {
-flex: 1;
-display: flex;
-min-height: 0;
-position: relative;
-}
-
-@media (orientation: landscape) {
-#maps-container { flex-direction: row; }
-.divider { width: 1px; height: 100%; }
-}
-
-@media (orientation: portrait) {
-#maps-container { flex-direction: column; }
-.divider { width: 100%; height: 1px; }
-}
-
-.divider { background: var(–border); flex-shrink: 0; z-index: 10; }
-
-.map-panel {
-flex: 1;
-display: flex;
-flex-direction: column;
-min-width: 0;
-min-height: 0;
-position: relative;
-}
-
-/* ── SEARCH BAR ── */
-.search-bar {
-flex-shrink: 0;
-height: 38px;
-background: var(–surface);
-border-bottom: 1px solid var(–border);
-display: flex;
-align-items: center;
-padding: 0 8px;
-gap: 6px;
-z-index: 900;
-position: relative;
-}
-
-.panel-label {
-font-size: 8px;
-font-weight: 500;
-letter-spacing: 0.14em;
-text-transform: uppercase;
-flex-shrink: 0;
-width: 42px;
-font-family: ‘DM Mono’, monospace;
-}
-
-#panel-home .panel-label  { color: var(–accent); }
-#panel-target .panel-label { color: var(–accent2); }
-
-.search-input {
-flex: 1;
-height: 26px;
-background: var(–bg);
-border: 1px solid var(–border2);
-border-radius: 4px;
-color: var(–text);
-font-size: 11px;
-padding: 0 9px;
-outline: none;
-min-width: 0;
-transition: border-color 0.15s;
-user-select: text;
--webkit-user-select: text;
-font-family: ‘DM Mono’, monospace;
-}
-
-.search-input::placeholder { color: var(–muted); }
-.search-input:focus { border-color: var(–accent); }
-#panel-target .search-input:focus { border-color: var(–accent2); }
-
-.search-btn {
-flex-shrink: 0;
-width: 30px;
-height: 26px;
-border: none;
-border-radius: 4px;
-cursor: pointer;
-font-size: 12px;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-
-#panel-home .search-btn   { background: var(–accent);  color: #080a0f; }
-#panel-target .search-btn { background: var(–accent2); color: #080a0f; }
-
-.pin-this-btn {
-flex-shrink: 0;
-width: 26px;
-height: 26px;
-border: 1px solid var(–border2);
-border-radius: 4px;
-background: none;
-color: var(–muted);
-cursor: pointer;
-font-size: 12px;
-display: flex;
-align-items: center;
-justify-content: center;
-transition: color 0.15s, border-color 0.15s;
-}
-
-.pin-this-btn.pinned { color: var(–accent); border-color: var(–accent); }
-
-.autocomplete-list {
-position: absolute;
-top: 38px;
-left: 0; right: 0;
-background: var(–surface);
-border: 1px solid var(–border2);
-border-top: none;
-z-index: 2000;
-max-height: 200px;
-overflow-y: auto;
-display: none;
-box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-}
-
-.autocomplete-list.open { display: block; }
-
-.ac-item {
-padding: 10px 12px;
-font-size: 11px;
-color: var(–text);
-cursor: pointer;
-border-bottom: 1px solid var(–border);
-min-height: 42px;
-display: flex;
-align-items: center;
-line-height: 1.4;
-font-family: ‘DM Mono’, monospace;
-}
-
-.ac-item:last-child { border-bottom: none; }
-.ac-item:hover, .ac-item:active { background: var(–bg); }
-
-/* ── MAP VIEW ── */
-.map-view { flex: 1; min-height: 0; z-index: 1; }
-
-/* ── SCALE LABEL ── */
-.scale-label {
-position: absolute;
-bottom: 26px;
-left: 8px;
-background: rgba(8,10,15,0.88);
-border: 1px solid var(–border2);
-border-radius: 3px;
-padding: 3px 8px;
-font-size: 10px;
-font-weight: 500;
-letter-spacing: 0.08em;
-color: #ffffff;
-pointer-events: none;
-z-index: 500;
-backdrop-filter: blur(4px);
-font-family: ‘DM Mono’, monospace;
-}
-
-/* ── STATUS TOAST ── */
-.map-status {
-position: absolute;
-bottom: 10px;
-left: 50%;
-transform: translateX(-50%);
-background: rgba(8,10,15,0.9);
-border: 1px solid var(–border2);
-border-radius: 20px;
-padding: 4px 14px;
-font-size: 10px;
-color: var(–muted);
-pointer-events: none;
-z-index: 500;
-white-space: nowrap;
-opacity: 0;
-transition: opacity 0.3s;
-font-family: ‘DM Mono’, monospace;
-}
-
-.map-status.show { opacity: 1; }
-
-/* ── CREDIT ── */
-#credit {
-position: absolute;
-bottom: 6px;
-right: 8px;
-font-size: 8px;
-font-weight: 400;
-letter-spacing: 0.08em;
-color: var(–muted);
-pointer-events: none;
-z-index: 500;
-opacity: 0.5;
-font-family: ‘DM Mono’, monospace;
-}
-
-/* ── FULLSCREEN ── */
-#app.fullscreen #topbar,
-#app.fullscreen .slide-panel,
-#app.fullscreen .search-bar { display: none !important; }
-
-#app.fullscreen {
-position: fixed;
-inset: 0;
-height: 100dvh;
-z-index: 9999;
-}
-
-#app.fullscreen #maps-container { flex: 1; height: 100%; }
-
-/* ── FULLSCREEN EXIT ── */
-#fs-exit {
-display: none;
-position: fixed;
-top: calc(var(–safe-top) + 12px);
-left: calc(var(–safe-left) + 12px);
-z-index: 10000;
-width: 54px;
-height: 46px;
-background: rgba(8,10,15,0.92);
-border: 1px solid var(–border2);
-border-radius: 6px;
-color: var(–text);
-font-size: 14px;
-cursor: pointer;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-gap: 2px;
-backdrop-filter: blur(8px);
--webkit-tap-highlight-color: transparent;
-}
-
-#fs-exit .tb-label {
-font-size: 7px;
-font-weight: 500;
-letter-spacing: 0.1em;
-text-transform: uppercase;
-color: inherit;
-font-family: ‘DM Mono’, monospace;
-}
-
-#app.fullscreen ~ #fs-exit { display: flex !important; }
-
-/* MapLibre overrides */
-.maplibregl-ctrl-zoom-in,
-.maplibregl-ctrl-zoom-out,
-.maplibregl-ctrl-compass {
-background-color: var(–surface2) !important;
-border-color: var(–border2) !important;
-}
-
-.maplibregl-ctrl button .maplibregl-ctrl-icon { filter: invert(0.7); }
-.maplibregl-ctrl-group { background: var(–surface2) !important; border: 1px solid var(–border2) !important; border-radius: 5px !important; box-shadow: none !important; }
-.maplibregl-ctrl-attrib { display: none !important; }
-.maplibregl-ctrl-logo { display: none !important; }
-.maplibregl-ctrl-bottom-right { display: none !important; }
-.maplibregl-ctrl-bottom-left  { display: none !important; }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;overflow:hidden;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+  #app{display:flex;flex-direction:column;height:100dvh;padding-top:var(--safe-top);padding-bottom:var(--safe-bottom);padding-left:var(--safe-left);padding-right:var(--safe-right)}
+  #topbar{flex-shrink:0;height:var(--panel-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:7px;z-index:1000}
+  #wordmark{display:flex;flex-direction:column;flex-shrink:0;gap:1px}
+  #wordmark-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:.04em;color:var(--accent);line-height:1;text-transform:uppercase}
+  #wordmark-title .t2{color:var(--accent2)}
+  #wordmark-title .ver{color:var(--muted);font-family:'DM Mono',monospace;font-size:9px;font-weight:400;letter-spacing:.06em;margin-left:4px}
+  #wordmark-sub{font-size:8px;font-weight:500;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+  .topbar-gap{flex:1}
+  #zoom-badge{font-size:11px;font-weight:500;letter-spacing:.08em;color:var(--bright);background:var(--bg);border:1px solid var(--border2);border-radius:3px;padding:3px 8px;white-space:nowrap;flex-shrink:0;min-width:54px;text-align:center;font-family:'DM Mono',monospace}
+  #globe-badge{font-size:9px;font-weight:500;letter-spacing:.08em;border-radius:3px;padding:3px 7px;white-space:nowrap;flex-shrink:0;border:1px solid var(--accent);color:var(--accent);background:rgba(57,224,160,.06);text-transform:uppercase}
+  .tb-btn{flex-shrink:0;width:56px;height:46px;border:1px solid var(--border2);border-radius:7px;background:var(--surface2);color:var(--bright);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:17px;transition:color .15s,border-color .15s,background .15s;-webkit-tap-highlight-color:transparent}
+  .tb-btn .tb-label{font-size:9px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;line-height:1;color:inherit;font-family:'DM Mono',monospace}
+  .tb-btn:active{opacity:.65}
+  .tb-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(57,224,160,.07)}
+  .slide-panel{flex-shrink:0;overflow:hidden;max-height:0;transition:max-height .22s ease;background:var(--surface);border-bottom:0px solid var(--border)}
+  .slide-panel.open{max-height:54px;border-bottom:1px solid var(--border)}
+  .panel-inner{height:54px;display:flex;align-items:center;padding:0 12px;gap:10px}
+  .style-opt{height:28px;padding:0 11px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--muted);font-size:10px;font-weight:500;letter-spacing:.1em;cursor:pointer;text-transform:uppercase;transition:color .15s,border-color .15s,background .15s;white-space:nowrap;font-family:'DM Mono',monospace}
+  .style-opt.active{color:var(--accent2);border-color:var(--accent2);background:rgba(79,168,245,.07)}
+  #pins-inner{height:54px;display:flex;align-items:center;padding:0 10px;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  #pins-inner::-webkit-scrollbar{display:none}
+  .pin-chip{flex-shrink:0;height:30px;padding:0 10px;border:1px solid var(--border2);border-radius:15px;background:var(--bg);color:var(--text);font-size:10px;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;max-width:140px;font-family:'DM Mono',monospace}
+  .pin-chip .pin-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .pin-chip .pin-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pin-chip .pin-del{flex-shrink:0;color:var(--muted);font-size:13px;line-height:1}
+  #maps-container{flex:1;display:flex;min-height:0;position:relative}
+  @media(orientation:landscape){#maps-container{flex-direction:row}.divider{width:1px;height:100%}}
+  @media(orientation:portrait){#maps-container{flex-direction:column}.divider{width:100%;height:1px}}
+  .divider{background:var(--border);flex-shrink:0;z-index:10}
+  .map-panel{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;position:relative}
+  .search-bar{flex-shrink:0;height:38px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 8px;gap:6px;z-index:900;position:relative}
+  .panel-label{font-size:8px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;flex-shrink:0;width:42px;font-family:'DM Mono',monospace}
+  #panel-home .panel-label{color:var(--accent)}
+  #panel-target .panel-label{color:var(--accent2)}
+  .search-input{flex:1;height:26px;background:var(--bg);border:1px solid var(--border2);border-radius:4px;color:var(--text);font-size:11px;padding:0 9px;outline:none;min-width:0;transition:border-color .15s;user-select:text;-webkit-user-select:text;font-family:'DM Mono',monospace}
+  .search-input::placeholder{color:var(--muted)}
+  .search-input:focus{border-color:var(--accent)}
+  #panel-target .search-input:focus{border-color:var(--accent2)}
+  .search-btn{flex-shrink:0;width:30px;height:26px;border:none;border-radius:4px;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center}
+  #panel-home .search-btn{background:var(--accent);color:#080a0f}
+  #panel-target .search-btn{background:var(--accent2);color:#080a0f}
+  .pin-this-btn{flex-shrink:0;width:26px;height:26px;border:1px solid var(--border2);border-radius:4px;background:none;color:var(--muted);cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;transition:color .15s,border-color .15s}
+  .pin-this-btn.pinned{color:var(--accent);border-color:var(--accent)}
+  .autocomplete-list{position:absolute;top:38px;left:0;right:0;background:var(--surface);border:1px solid var(--border2);border-top:none;z-index:2000;max-height:200px;overflow-y:auto;display:none;box-shadow:0 8px 32px rgba(0,0,0,.6)}
+  .autocomplete-list.open{display:block}
+  .ac-item{padding:10px 12px;font-size:11px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);min-height:42px;display:flex;align-items:center;line-height:1.4;font-family:'DM Mono',monospace}
+  .ac-item:last-child{border-bottom:none}
+  .ac-item:hover,.ac-item:active{background:var(--bg)}
+  .map-view{flex:1;min-height:0;z-index:1}
+  .scale-label{position:absolute;bottom:26px;left:8px;background:rgba(8,10,15,.88);border:1px solid var(--border2);border-radius:3px;padding:3px 8px;font-size:10px;font-weight:500;letter-spacing:.08em;color:#fff;pointer-events:none;z-index:500;backdrop-filter:blur(4px);font-family:'DM Mono',monospace}
+  .map-status{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(8,10,15,.9);border:1px solid var(--border2);border-radius:20px;padding:4px 14px;font-size:10px;color:var(--muted);pointer-events:none;z-index:500;white-space:nowrap;opacity:0;transition:opacity .3s;font-family:'DM Mono',monospace}
+  .map-status.show{opacity:1}
+  #credit{position:absolute;bottom:6px;right:8px;font-size:8px;font-weight:400;letter-spacing:.08em;color:var(--muted);pointer-events:none;z-index:500;opacity:.5;font-family:'DM Mono',monospace}
+  #app.fullscreen #topbar,#app.fullscreen .slide-panel,#app.fullscreen .search-bar{display:none!important}
+  #app.fullscreen{position:fixed;inset:0;height:100dvh;z-index:9999}
+  #app.fullscreen #maps-container{flex:1;height:100%}
+  #fs-exit{display:none;position:fixed;top:calc(var(--safe-top) + 12px);left:calc(var(--safe-left) + 12px);z-index:10000;width:54px;height:46px;background:rgba(8,10,15,.92);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:14px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:2px;backdrop-filter:blur(8px);-webkit-tap-highlight-color:transparent}
+  #fs-exit .tb-label{font-size:7px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:inherit;font-family:'DM Mono',monospace}
+  #app.fullscreen ~ #fs-exit{display:flex!important}
+  .maplibregl-ctrl button .maplibregl-ctrl-icon{filter:invert(.7)}
+  .maplibregl-ctrl-group{background:var(--surface2)!important;border:1px solid var(--border2)!important;border-radius:5px!important;box-shadow:none!important}
+  .maplibregl-ctrl-attrib,.maplibregl-ctrl-logo,.maplibregl-ctrl-bottom-right,.maplibregl-ctrl-bottom-left{display:none!important}
 </style>
-
 </head>
 <body>
 <div id="app">
-
-  <!-- TOPBAR -->
-
   <div id="topbar">
     <div id="wordmark">
-      <div id="wordmark-title">Scale<span class="t2">Match</span><span class="ver">v3.0.1</span></div>
+      <div id="wordmark-title">Scale<span class="t2">Match</span><span class="ver">v3.1.0</span></div>
       <div id="wordmark-sub">© Dave Forman</div>
     </div>
     <div class="topbar-gap"></div>
     <div id="globe-badge">⊕ Globe</div>
     <div id="zoom-badge">Z: —</div>
     <button class="tb-btn" id="btn-pan">⇄<span class="tb-label">Pan</span></button>
-    <button class="tb-btn" id="btn-ring">⊙<span class="tb-label">Ring</span></button>
     <button class="tb-btn" id="btn-style">⊞<span class="tb-label">Style</span></button>
     <button class="tb-btn" id="btn-pins">◈<span class="tb-label">Pins</span></button>
     <button class="tb-btn" id="btn-fs">⤢<span class="tb-label">Full</span></button>
   </div>
-
-  <!-- RING PANEL -->
-
-  <div class="slide-panel" id="ring-panel">
-    <div class="panel-inner">
-      <label>Radius</label>
-      <input type="range" id="ring-radius" min="1" max="500" value="25" step="1">
-      <div id="ring-val">25 km</div>
-      <button class="ring-unit-btn" id="ring-unit">mi</button>
-      <button class="panel-clear-btn" id="ring-clear">Clear</button>
-    </div>
-  </div>
-
-  <!-- STYLE PANEL -->
-
   <div class="slide-panel" id="style-panel">
     <div class="panel-inner">
       <button class="style-opt active" data-style="voyager">Voyager</button>
@@ -634,557 +107,190 @@ border-color: var(–border2) !important;
       <button class="style-opt" data-style="terrain">Terrain</button>
     </div>
   </div>
-
-  <!-- PINS PANEL -->
-
   <div class="slide-panel" id="pins-panel">
-    <div id="pins-inner">
-      <div id="pins-list"></div>
+    <div id="pins-inner"><div id="pins-list"></div></div>
+  </div>
+  <div id="maps-container">
+    <div class="map-panel" id="panel-home">
+      <div class="search-bar">
+        <div class="panel-label">Home</div>
+        <input class="search-input" id="home-input" type="text" placeholder="Search home location…" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="search-btn" id="home-btn">↵</button>
+        <button class="pin-this-btn" id="home-pin-btn">◈</button>
+        <div class="autocomplete-list" id="home-ac"></div>
+      </div>
+      <div class="map-view" id="map-home"></div>
+      <div class="scale-label" id="home-scale">—</div>
+      <div class="map-status" id="home-status"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="map-panel" id="panel-target">
+      <div class="search-bar">
+        <div class="panel-label">Target</div>
+        <input class="search-input" id="target-input" type="text" placeholder="Search target location…" autocomplete="off" autocorrect="off" spellcheck="false">
+        <button class="search-btn" id="target-btn">↵</button>
+        <button class="pin-this-btn" id="target-pin-btn">◈</button>
+        <div class="autocomplete-list" id="target-ac"></div>
+      </div>
+      <div class="map-view" id="map-target"></div>
+      <div class="scale-label" id="target-scale">—</div>
+      <div class="map-status" id="target-status"></div>
     </div>
   </div>
-
-  <!-- MAPS -->
-
-  <div id="maps-container">
-
-```
-<!-- HOME -->
-<div class="map-panel" id="panel-home">
-  <div class="search-bar">
-    <div class="panel-label">Home</div>
-    <input class="search-input" id="home-input" type="text" placeholder="Search home location…" autocomplete="off" autocorrect="off" spellcheck="false">
-    <button class="search-btn" id="home-btn">↵</button>
-    <button class="pin-this-btn" id="home-pin-btn">◈</button>
-    <div class="autocomplete-list" id="home-ac"></div>
-  </div>
-  <div class="map-view" id="map-home"></div>
-  <div class="scale-label" id="home-scale">—</div>
-  <div class="map-status" id="home-status"></div>
-</div>
-
-<div class="divider"></div>
-
-<!-- TARGET -->
-<div class="map-panel" id="panel-target">
-  <div class="search-bar">
-    <div class="panel-label">Target</div>
-    <input class="search-input" id="target-input" type="text" placeholder="Search target location…" autocomplete="off" autocorrect="off" spellcheck="false">
-    <button class="search-btn" id="target-btn">↵</button>
-    <button class="pin-this-btn" id="target-pin-btn">◈</button>
-    <div class="autocomplete-list" id="target-ac"></div>
-  </div>
-  <div class="map-view" id="map-target"></div>
-  <div class="scale-label" id="target-scale">—</div>
-  <div class="map-status" id="target-status"></div>
-</div>
-```
-
-  </div>
-
   <div id="credit">© Dave Forman</div>
 </div>
-
 <button id="fs-exit">✕<span class="tb-label">Exit</span></button>
-
 <script>
-// ─────────────────────────────────────────
-// TILE STYLES
-// ─────────────────────────────────────────
 const STYLES = {
-  voyager: {
-    version: 8,
-    sources: { carto: { type: 'raster', tiles: ['https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png','https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png','https://c.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }},
-    layers: [{ id: 'bg', type: 'raster', source: 'carto' }]
-  },
-  positron: {
-    version: 8,
-    sources: { carto: { type: 'raster', tiles: ['https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png','https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 19 }},
-    layers: [{ id: 'bg', type: 'raster', source: 'carto' }]
-  },
-  satellite: {
-    version: 8,
-    sources: { esri: { type: 'raster', tiles: ['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'], tileSize: 256, maxzoom: 19 }},
-    layers: [{ id: 'bg', type: 'raster', source: 'esri' }]
-  },
-  terrain: {
-    version: 8,
-    sources: { otm: { type: 'raster', tiles: ['https://a.tile.opentopomap.org/{z}/{x}/{y}.png','https://b.tile.opentopomap.org/{z}/{x}/{y}.png'], tileSize: 256, maxzoom: 17 }},
-    layers: [{ id: 'bg', type: 'raster', source: 'otm' }]
-  }
+  voyager:{version:8,sources:{carto:{type:'raster',tiles:['https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png','https://b.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'],tileSize:256,maxzoom:19}},layers:[{id:'bg',type:'raster',source:'carto'}]},
+  positron:{version:8,sources:{carto:{type:'raster',tiles:['https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png','https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'],tileSize:256,maxzoom:19}},layers:[{id:'bg',type:'raster',source:'carto'}]},
+  satellite:{version:8,sources:{esri:{type:'raster',tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],tileSize:256,maxzoom:19}},layers:[{id:'bg',type:'raster',source:'esri'}]},
+  terrain:{version:8,sources:{otm:{type:'raster',tiles:['https://a.tile.opentopomap.org/{z}/{x}/{y}.png','https://b.tile.opentopomap.org/{z}/{x}/{y}.png'],tileSize:256,maxzoom:17}},layers:[{id:'bg',type:'raster',source:'otm'}]}
 };
 
-// ─────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────
-let currentStyle  = 'voyager';
-let nominalZoom   = 4;
-let syncLock      = false;
-let panSyncActive = false;
-let ringActive    = false;
-let ringUnit      = 'km';
-const KM_PER_MI   = 1.60934;
+let currentStyle=‘voyager’, nominalZoom=4, syncLock=false, panSyncActive=false;
 
-// Ring source/layer IDs
-const RING_HOME_SRC   = 'ring-home-src';
-const RING_HOME_LYR   = 'ring-home-lyr';
-const RING_HOME_BDR   = 'ring-home-bdr';
-const RING_TGT_SRC    = 'ring-tgt-src';
-const RING_TGT_LYR    = 'ring-tgt-lyr';
-const RING_TGT_BDR    = 'ring-tgt-bdr';
+function makeStyle(n){return JSON.parse(JSON.stringify(STYLES[n]));}
 
-// ─────────────────────────────────────────
-// MAP INIT
-// Globe projection — no Mercator distortion
-// ─────────────────────────────────────────
-function makeStyle(name) {
-  return JSON.parse(JSON.stringify(STYLES[name]));
-}
+const mapHome=new maplibregl.Map({container:‘map-home’,style:makeStyle(‘voyager’),center:[-0.12,51.5],zoom:nominalZoom,attributionControl:false});
+const mapTarget=new maplibregl.Map({container:‘map-target’,style:makeStyle(‘voyager’),center:[-74.01,40.71],zoom:nominalZoom,attributionControl:false});
 
-const mapHome = new maplibregl.Map({
-  container: 'map-home',
-  style: makeStyle('voyager'),
-  center: [-0.12, 51.5],
-  zoom: nominalZoom,
-  attributionControl: false
+mapHome.on(‘style.load’,()=>{mapHome.setProjection({type:‘globe’});});
+mapTarget.on(‘style.load’,()=>{mapTarget.setProjection({type:‘globe’});});
+
+mapHome.addControl(new maplibregl.NavigationControl({showCompass:false}),‘top-left’);
+mapTarget.addControl(new maplibregl.NavigationControl({showCompass:false}),‘top-left’);
+
+mapHome.on(‘zoom’,()=>{if(syncLock)return;syncLock=true;nominalZoom=mapHome.getZoom();mapTarget.setZoom(nominalZoom);syncLock=false;updateUI();});
+mapTarget.on(‘zoom’,()=>{if(syncLock)return;syncLock=true;nominalZoom=mapTarget.getZoom();mapHome.setZoom(nominalZoom);syncLock=false;updateUI();});
+
+let panLock=false,homePanBase=null,targetPanBase=null;
+
+mapHome.on(‘move’,()=>{
+if(!panSyncActive||panLock)return; panLock=true;
+const c=mapHome.getCenter();
+const dlng=c.lng-(homePanBase?homePanBase.lng:c.lng), dlat=c.lat-(homePanBase?homePanBase.lat:c.lat);
+homePanBase={lat:c.lat,lng:c.lng};
+if(targetPanBase){const nt={lng:targetPanBase.lng+dlng,lat:Math.max(-85,Math.min(85,targetPanBase.lat+dlat))};targetPanBase=nt;mapTarget.setCenter(nt);}
+else{const tc=mapTarget.getCenter();targetPanBase={lat:tc.lat,lng:tc.lng};}
+panLock=false;
 });
 
-const mapTarget = new maplibregl.Map({
-  container: 'map-target',
-  style: makeStyle('voyager'),
-  center: [-74.01, 40.71],
-  zoom: nominalZoom,
-  attributionControl: false
+mapTarget.on(‘move’,()=>{
+if(!panSyncActive||panLock)return; panLock=true;
+const c=mapTarget.getCenter();
+const dlng=c.lng-(targetPanBase?targetPanBase.lng:c.lng), dlat=c.lat-(targetPanBase?targetPanBase.lat:c.lat);
+targetPanBase={lat:c.lat,lng:c.lng};
+if(homePanBase){const nh={lng:homePanBase.lng+dlng,lat:Math.max(-85,Math.min(85,homePanBase.lat+dlat))};homePanBase=nh;mapHome.setCenter(nh);}
+else{const hc=mapHome.getCenter();homePanBase={lat:hc.lat,lng:hc.lng};}
+panLock=false;
 });
 
-mapHome.on('style.load',   () => { mapHome.setProjection({   type: 'globe' }); });
-mapTarget.on('style.load', () => { mapTarget.setProjection({ type: 'globe' }); });
+function zoomToScale(z){const s={1:‘1:500M’,2:‘1:250M’,3:‘1:150M’,4:‘1:70M’,5:‘1:35M’,6:‘1:15M’,7:‘1:8M’,8:‘1:4M’,9:‘1:2M’,10:‘1:1M’,11:‘1:500k’,12:‘1:250k’,13:‘1:150k’,14:‘1:70k’,15:‘1:35k’,16:‘1:15k’,17:‘1:8k’,18:‘1:4k’,19:‘1:2k’};return s[Math.round(z)]||`Z${z.toFixed(1)}`;}
 
-mapHome.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
-mapTarget.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-left');
+function updateUI(){
+const z=mapHome.getZoom();
+document.getElementById(‘zoom-badge’).textContent=`Z: ${z.toFixed(1)}`;
+document.getElementById(‘home-scale’).textContent=zoomToScale(mapHome.getZoom());
+document.getElementById(‘target-scale’).textContent=zoomToScale(mapTarget.getZoom());
+}
 
-// ─────────────────────────────────────────
-// ZOOM SYNC — always in sync, independent pan
-// On globe, zoom IS zoom — no Mercator correction needed
-// ─────────────────────────────────────────
-mapHome.on('zoom', () => {
-  if (syncLock) return;
-  syncLock = true;
-  nominalZoom = mapHome.getZoom();
-  mapTarget.setZoom(nominalZoom);
-  syncLock = false;
-  updateUI();
-  if (ringActive) drawRings();
+mapHome.on(‘load’,updateUI); mapTarget.on(‘load’,updateUI);
+mapHome.on(‘zoomend’,updateUI); mapTarget.on(‘zoomend’,updateUI);
+
+document.querySelectorAll(’.style-opt’).forEach(btn=>{
+btn.addEventListener(‘click’,()=>{
+const style=btn.dataset.style;
+if(style===currentStyle)return;
+currentStyle=style;
+document.querySelectorAll(’.style-opt’).forEach(b=>b.classList.remove(‘active’));
+btn.classList.add(‘active’);
+mapHome.setStyle(makeStyle(style));
+mapTarget.setStyle(makeStyle(style));
+mapHome.once(‘style.load’,()=>{mapHome.setProjection({type:‘globe’});});
+mapTarget.once(‘style.load’,()=>{mapTarget.setProjection({type:‘globe’});});
+if(style===‘terrain’&&nominalZoom>17){nominalZoom=17;mapHome.setZoom(17);mapTarget.setZoom(17);showStatus(‘home-status’,‘Terrain max zoom Z:17’);showStatus(‘target-status’,‘Terrain max zoom Z:17’);}
+});
 });
 
-mapTarget.on('zoom', () => {
-  if (syncLock) return;
-  syncLock = true;
-  nominalZoom = mapTarget.getZoom();
-  mapHome.setZoom(nominalZoom);
-  syncLock = false;
-  updateUI();
-  if (ringActive) drawRings();
+const PANELS={style:‘style-panel’,pins:‘pins-panel’};
+function togglePanel(id,force){
+const el=document.getElementById(id);
+const open=force!==undefined?force:!el.classList.contains(‘open’);
+Object.values(PANELS).forEach(pid=>{if(pid!==id)document.getElementById(pid).classList.remove(‘open’);});
+el.classList.toggle(‘open’,open);
+}
+
+document.getElementById(‘btn-pan’).addEventListener(‘click’,()=>{
+panSyncActive=!panSyncActive;
+document.getElementById(‘btn-pan’).classList.toggle(‘active’,panSyncActive);
+if(panSyncActive){const hc=mapHome.getCenter(),tc=mapTarget.getCenter();homePanBase={lat:hc.lat,lng:hc.lng};targetPanBase={lat:tc.lat,lng:tc.lng};}
 });
+document.getElementById(‘btn-style’).addEventListener(‘click’,()=>{const open=document.getElementById(‘style-panel’).classList.contains(‘open’);document.getElementById(‘btn-style’).classList.toggle(‘active’,!open);togglePanel(‘style-panel’);});
+document.getElementById(‘btn-pins’).addEventListener(‘click’,()=>{const open=document.getElementById(‘pins-panel’).classList.contains(‘open’);document.getElementById(‘btn-pins’).classList.toggle(‘active’,!open);togglePanel(‘pins-panel’);renderPins();});
 
-// ─────────────────────────────────────────
-// PAN SYNC
-// ─────────────────────────────────────────
-let panLock = false;
-let homePanBase   = null;
-let targetPanBase = null;
+const app=document.getElementById(‘app’),fsExit=document.getElementById(‘fs-exit’),btnFS=document.getElementById(‘btn-fs’);
+function enterFullscreen(){app.classList.add(‘fullscreen’);btnFS.classList.add(‘active’);setTimeout(()=>{mapHome.resize();mapTarget.resize();},100);setTimeout(()=>{mapHome.resize();mapTarget.resize();},400);}
+function exitFullscreen(){app.classList.remove(‘fullscreen’);btnFS.classList.remove(‘active’);setTimeout(()=>{mapHome.resize();mapTarget.resize();},100);}
+btnFS.addEventListener(‘click’,()=>app.classList.contains(‘fullscreen’)?exitFullscreen():enterFullscreen());
+fsExit.addEventListener(‘click’,exitFullscreen);
+document.addEventListener(‘fullscreenchange’,()=>{if(!document.fullscreenElement)exitFullscreen();});
 
-mapHome.on('move', () => {
-  if (!panSyncActive || panLock) return;
-  panLock = true;
-  const c = mapHome.getCenter();
-  const dlng = c.lng - (homePanBase ? homePanBase.lng : c.lng);
-  const dlat = c.lat - (homePanBase ? homePanBase.lat : c.lat);
-  homePanBase = { lat: c.lat, lng: c.lng };
-  if (targetPanBase) {
-    const nt = { lng: targetPanBase.lng + dlng, lat: Math.max(-85, Math.min(85, targetPanBase.lat + dlat)) };
-    targetPanBase = nt;
-    mapTarget.setCenter(nt);
-  } else {
-    const tc = mapTarget.getCenter();
-    targetPanBase = { lat: tc.lat, lng: tc.lng };
-  }
-  panLock = false;
+let pins=JSON.parse(localStorage.getItem(‘sm_pins_v3’)||’[]’);
+function savePins(){try{localStorage.setItem(‘sm_pins_v3’,JSON.stringify(pins));}catch(e){}}
+function renderPins(){
+const list=document.getElementById(‘pins-list’);
+list.innerHTML=’’;
+if(!pins.length){const e=document.createElement(‘span’);e.style.cssText=‘font-size:10px;color:var(–muted);padding:0 6px;white-space:nowrap;font-family:“DM Mono”,monospace;’;e.textContent=‘No saved locations’;list.appendChild(e);return;}
+pins.forEach((pin,i)=>{
+const c=document.createElement(‘div’);c.className=‘pin-chip’;
+c.innerHTML=`<span class="pin-dot" style="background:${pin.panel==='home'?'var(--accent)':'var(--accent2)'}"></span><span class="pin-label">${pin.label}</span><span class="pin-del">×</span>`;
+c.addEventListener(‘click’,e=>{
+if(e.target.classList.contains(‘pin-del’)){pins.splice(i,1);savePins();renderPins();return;}
+const m=pin.panel===‘home’?mapHome:mapTarget;
+m.flyTo({center:[pin.lng,pin.lat],zoom:m.getZoom(),animate:true,duration:800});
+document.getElementById(pin.panel+’-input’).value=pin.label;
 });
-
-mapTarget.on('move', () => {
-  if (!panSyncActive || panLock) return;
-  panLock = true;
-  const c = mapTarget.getCenter();
-  const dlng = c.lng - (targetPanBase ? targetPanBase.lng : c.lng);
-  const dlat = c.lat - (targetPanBase ? targetPanBase.lat : c.lat);
-  targetPanBase = { lat: c.lat, lng: c.lng };
-  if (homePanBase) {
-    const nh = { lng: homePanBase.lng + dlng, lat: Math.max(-85, Math.min(85, homePanBase.lat + dlat)) };
-    homePanBase = nh;
-    mapHome.setCenter(nh);
-  } else {
-    const hc = mapHome.getCenter();
-    homePanBase = { lat: hc.lat, lng: hc.lng };
-  }
-  panLock = false;
+list.appendChild(c);
 });
-
-mapHome.on('moveend',   () => { if (ringActive) drawRings(); });
-mapTarget.on('moveend', () => { if (ringActive) drawRings(); });
-
-// ─────────────────────────────────────────
-// UI UPDATE
-// ─────────────────────────────────────────
-function zoomToScale(z) {
-  const s = {
-    1:'1:500M',2:'1:250M',3:'1:150M',4:'1:70M',5:'1:35M',
-    6:'1:15M',7:'1:8M',8:'1:4M',9:'1:2M',10:'1:1M',
-    11:'1:500k',12:'1:250k',13:'1:150k',14:'1:70k',15:'1:35k',
-    16:'1:15k',17:'1:8k',18:'1:4k',19:'1:2k'
-  };
-  return s[Math.round(z)] || `Z${z.toFixed(1)}`;
 }
-
-function updateUI() {
-  const z = mapHome.getZoom ? mapHome.getZoom() : nominalZoom;
-  document.getElementById('zoom-badge').textContent  = `Z: ${z.toFixed(1)}`;
-  document.getElementById('home-scale').textContent   = zoomToScale(mapHome.getZoom ? mapHome.getZoom() : nominalZoom);
-  document.getElementById('target-scale').textContent = zoomToScale(mapTarget.getZoom ? mapTarget.getZoom() : nominalZoom);
+function pinCurrentLocation(panelId){
+const map=panelId===‘home’?mapHome:mapTarget;
+const inp=document.getElementById(panelId+’-input’);
+const label=(inp.value||‘Location’).split(’,’)[0].trim().slice(0,28);
+const c=map.getCenter();
+pins.push({label,lat:c.lat,lng:c.lng,panel:panelId});
+savePins();renderPins();
+const btn=document.getElementById(panelId+’-pin-btn’);
+btn.classList.add(‘pinned’);setTimeout(()=>btn.classList.remove(‘pinned’),1500);
 }
-
-mapHome.on('load',   updateUI);
-mapTarget.on('load', updateUI);
-
-// ─────────────────────────────────────────
-// DISTANCE RINGS — robust, always redraws on moveend
-// Remove+readd every time to avoid stale source state
-// ─────────────────────────────────────────
-function geodesicCircle(lng, lat, radiusKm, steps) {
-  steps = steps || 64;
-  const R = 6371;
-  const latR = lat * Math.PI / 180;
-  const lngR = lng * Math.PI / 180;
-  const d = radiusKm / R;
-  const coords = [];
-  for (let i = 0; i <= steps; i++) {
-    const brng = (i / steps) * 2 * Math.PI;
-    const lat2 = Math.asin(Math.sin(latR) * Math.cos(d) + Math.cos(latR) * Math.sin(d) * Math.cos(brng));
-    const lng2 = lngR + Math.atan2(Math.sin(brng) * Math.sin(d) * Math.cos(latR), Math.cos(d) - Math.sin(latR) * Math.sin(lat2));
-    coords.push([lng2 * 180 / Math.PI, lat2 * 180 / Math.PI]);
-  }
-  return { type: 'Feature', geometry: { type: 'Polygon', coordinates: [coords] } };
-}
-
-function ringRadiusKm() {
-  const v = parseInt(document.getElementById('ring-radius').value);
-  return ringUnit === 'mi' ? v * KM_PER_MI : v;
-}
-
-function safeRemoveRing(map, srcId, lyrFill, lyrBdr) {
-  try { if (map.getLayer(lyrBdr))  map.removeLayer(lyrBdr);  } catch(e) {}
-  try { if (map.getLayer(lyrFill)) map.removeLayer(lyrFill); } catch(e) {}
-  try { if (map.getSource(srcId))  map.removeSource(srcId);  } catch(e) {}
-}
-
-function safeAddRing(map, srcId, lyrFill, lyrBdr, color) {
-  if (!map.isStyleLoaded()) return;
-  safeRemoveRing(map, srcId, lyrFill, lyrBdr);
-  const c = map.getCenter();
-  const data = geodesicCircle(c.lng, c.lat, ringRadiusKm());
-  try {
-    map.addSource(srcId, { type: 'geojson', data });
-    map.addLayer({ id: lyrFill, type: 'fill', source: srcId, paint: { 'fill-color': color, 'fill-opacity': 0.07 } });
-    map.addLayer({ id: lyrBdr,  type: 'line', source: srcId, paint: { 'line-color': color, 'line-width': 1.8, 'line-dasharray': [5, 4] } });
-  } catch(e) {}
-}
-
-function drawRings() {
-  if (!ringActive) return;
-  safeAddRing(mapHome,   RING_HOME_SRC, RING_HOME_LYR, RING_HOME_BDR, '#39e0a0');
-  safeAddRing(mapTarget, RING_TGT_SRC,  RING_TGT_LYR,  RING_TGT_BDR,  '#4fa8f5');
-}
-
-function clearRings() {
-  safeRemoveRing(mapHome,   RING_HOME_SRC, RING_HOME_LYR, RING_HOME_BDR);
-  safeRemoveRing(mapTarget, RING_TGT_SRC,  RING_TGT_LYR,  RING_TGT_BDR);
-}
-
-// Redraw rings after every pan/zoom end
-mapHome.on('moveend',   () => { if (ringActive) drawRings(); });
-mapTarget.on('moveend', () => { if (ringActive) drawRings(); });
-
-const ringSlider  = document.getElementById('ring-radius');
-const ringValEl   = document.getElementById('ring-val');
-const ringUnitBtn = document.getElementById('ring-unit');
-
-ringSlider.addEventListener('input', () => {
-  ringValEl.textContent = `${ringSlider.value} ${ringUnit}`;
-  if (ringActive) drawRings();
-});
-
-ringUnitBtn.addEventListener('click', () => {
-  const v = parseInt(ringSlider.value);
-  if (ringUnit === 'km') {
-    ringUnit = 'mi'; ringUnitBtn.textContent = 'km';
-    ringSlider.value = Math.max(1, Math.round(v / KM_PER_MI));
-  } else {
-    ringUnit = 'km'; ringUnitBtn.textContent = 'mi';
-    ringSlider.value = Math.min(500, Math.round(v * KM_PER_MI));
-  }
-  ringValEl.textContent = `${ringSlider.value} ${ringUnit}`;
-  if (ringActive) drawRings();
-});
-
-document.getElementById('ring-clear').addEventListener('click', () => {
-  clearRings();
-  ringActive = false;
-  document.getElementById('btn-ring').classList.remove('active');
-  togglePanel('ring-panel', false);
-});
-
-// ─────────────────────────────────────────
-// STYLE SWITCHER
-// ─────────────────────────────────────────
-document.querySelectorAll('.style-opt').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const style = btn.dataset.style;
-    if (style === currentStyle) return;
-    currentStyle = style;
-    document.querySelectorAll('.style-opt').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-
-    const newStyleH = makeStyle(style);
-    const newStyleT = makeStyle(style);
-
-    mapHome.setStyle(newStyleH);
-    mapTarget.setStyle(newStyleT);
-
-    mapHome.once('style.load',   () => { mapHome.setProjection({   type: 'globe' }); });
-    mapTarget.once('style.load', () => { mapTarget.setProjection({ type: 'globe' }); });
-
-    // Re-add rings after style reload — wait for both maps
-    if (ringActive) {
-      mapHome.once('styledata',   () => safeAddRing(mapHome,   RING_HOME_SRC, RING_HOME_LYR, RING_HOME_BDR, '#39e0a0'));
-      mapTarget.once('styledata', () => safeAddRing(mapTarget, RING_TGT_SRC,  RING_TGT_LYR,  RING_TGT_BDR,  '#4fa8f5'));
-    }
-
-    if (style === 'terrain' && nominalZoom > 17) {
-      nominalZoom = 17;
-      mapHome.setZoom(17);
-      mapTarget.setZoom(17);
-      showStatus('home-status',   'Terrain max zoom Z:17');
-      showStatus('target-status', 'Terrain max zoom Z:17');
-    }
-  });
-});
-
-// ─────────────────────────────────────────
-// PANEL TOGGLES
-// ─────────────────────────────────────────
-const PANELS = { ring: 'ring-panel', style: 'style-panel', pins: 'pins-panel' };
-
-function togglePanel(id, force) {
-  const el = document.getElementById(id);
-  const open = force !== undefined ? force : !el.classList.contains('open');
-  Object.values(PANELS).forEach(pid => {
-    if (pid !== id) document.getElementById(pid).classList.remove('open');
-  });
-  el.classList.toggle('open', open);
-}
-
-document.getElementById('btn-pan').addEventListener('click', () => {
-  panSyncActive = !panSyncActive;
-  document.getElementById('btn-pan').classList.toggle('active', panSyncActive);
-  if (panSyncActive) {
-    const hc = mapHome.getCenter();
-    const tc = mapTarget.getCenter();
-    homePanBase   = { lat: hc.lat, lng: hc.lng };
-    targetPanBase = { lat: tc.lat, lng: tc.lng };
-  }
-});
-
-document.getElementById('btn-ring').addEventListener('click', () => {
-  ringActive = !ringActive;
-  document.getElementById('btn-ring').classList.toggle('active', ringActive);
-  togglePanel('ring-panel', ringActive);
-  if (ringActive) {
-    // Wait for style to be ready if not already
-    const doOnReady = (map, fn) => map.isStyleLoaded() ? fn() : map.once('styledata', fn);
-    doOnReady(mapHome,   drawRings);
-    doOnReady(mapTarget, drawRings);
-  } else {
-    clearRings();
-  }
-});
-
-document.getElementById('btn-style').addEventListener('click', () => {
-  const open = document.getElementById('style-panel').classList.contains('open');
-  document.getElementById('btn-style').classList.toggle('active', !open);
-  togglePanel('style-panel');
-});
-
-document.getElementById('btn-pins').addEventListener('click', () => {
-  const open = document.getElementById('pins-panel').classList.contains('open');
-  document.getElementById('btn-pins').classList.toggle('active', !open);
-  togglePanel('pins-panel');
-  renderPins();
-});
-
-// ─────────────────────────────────────────
-// FULLSCREEN
-// ─────────────────────────────────────────
-const app   = document.getElementById('app');
-const fsExit = document.getElementById('fs-exit');
-const btnFS  = document.getElementById('btn-fs');
-
-function enterFullscreen() {
-  app.classList.add('fullscreen');
-  btnFS.classList.add('active');
-  setTimeout(() => { mapHome.resize(); mapTarget.resize(); }, 100);
-  setTimeout(() => { mapHome.resize(); mapTarget.resize(); }, 400);
-}
-
-function exitFullscreen() {
-  app.classList.remove('fullscreen');
-  btnFS.classList.remove('active');
-  setTimeout(() => { mapHome.resize(); mapTarget.resize(); }, 100);
-}
-
-btnFS.addEventListener('click',  () => app.classList.contains('fullscreen') ? exitFullscreen() : enterFullscreen());
-fsExit.addEventListener('click', exitFullscreen);
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement) exitFullscreen(); });
-
-// ─────────────────────────────────────────
-// PINS
-// ─────────────────────────────────────────
-let pins = JSON.parse(localStorage.getItem('sm_pins_v3') || '[]');
-
-function savePins() { try { localStorage.setItem('sm_pins_v3', JSON.stringify(pins)); } catch(e) {} }
-
-function renderPins() {
-  const list = document.getElementById('pins-list');
-  list.innerHTML = '';
-  if (!pins.length) {
-    const e = document.createElement('span');
-    e.style.cssText = 'font-size:10px;color:var(--muted);padding:0 6px;white-space:nowrap;font-family:"DM Mono",monospace;';
-    e.textContent = 'No saved locations';
-    list.appendChild(e);
-    return;
-  }
-  pins.forEach((pin, i) => {
-    const c = document.createElement('div');
-    c.className = 'pin-chip';
-    c.innerHTML = `<span class="pin-dot" style="background:${pin.panel==='home'?'var(--accent)':'var(--accent2)'}"></span><span class="pin-label">${pin.label}</span><span class="pin-del">×</span>`;
-    c.addEventListener('click', e => {
-      if (e.target.classList.contains('pin-del')) { pins.splice(i,1); savePins(); renderPins(); return; }
-      const m = pin.panel === 'home' ? mapHome : mapTarget;
-      m.flyTo({ center: [pin.lng, pin.lat], zoom: m.getZoom(), animate: true, duration: 800 });
-      const inp = document.getElementById(pin.panel + '-input');
-      inp.value = pin.label;
-    });
-    list.appendChild(c);
-  });
-}
-
-function pinCurrentLocation(panelId) {
-  const map = panelId === 'home' ? mapHome : mapTarget;
-  const inp = document.getElementById(panelId + '-input');
-  const label = (inp.value || 'Location').split(',')[0].trim().slice(0, 28);
-  const c = map.getCenter();
-  pins.push({ label, lat: c.lat, lng: c.lng, panel: panelId });
-  savePins(); renderPins();
-  const btn = document.getElementById(panelId + '-pin-btn');
-  btn.classList.add('pinned');
-  setTimeout(() => btn.classList.remove('pinned'), 1500);
-}
-
-document.getElementById('home-pin-btn').addEventListener('click',   () => pinCurrentLocation('home'));
-document.getElementById('target-pin-btn').addEventListener('click', () => pinCurrentLocation('target'));
+document.getElementById(‘home-pin-btn’).addEventListener(‘click’,()=>pinCurrentLocation(‘home’));
+document.getElementById(‘target-pin-btn’).addEventListener(‘click’,()=>pinCurrentLocation(‘target’));
 renderPins();
 
-// ─────────────────────────────────────────
-// STATUS TOAST
-// ─────────────────────────────────────────
-function showStatus(id, msg) {
-  const el = document.getElementById(id);
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), 2500);
+function showStatus(id,msg){const el=document.getElementById(id);el.textContent=msg;el.classList.add(‘show’);clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove(‘show’),2500);}
+
+async function photonSearch(q){const r=await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lang=en`);const d=await r.json();return d.features.map(f=>({lat:f.geometry.coordinates[1],lon:f.geometry.coordinates[0],display_name:[f.properties.name,f.properties.city||f.properties.county,f.properties.state,f.properties.country].filter(Boolean).join(’, ’)}));}
+
+let dbT={};
+function setupSearch(inpId,btnId,acId,mapObj,statusId){
+const inp=document.getElementById(inpId),btn=document.getElementById(btnId),ac=document.getElementById(acId);
+function closeAC(){ac.innerHTML=’’;ac.classList.remove(‘open’);}
+function flyTo(item){mapObj.flyTo({center:[parseFloat(item.lon),parseFloat(item.lat)],zoom:mapObj.getZoom(),animate:true,duration:900});inp.value=item.display_name.split(’,’).slice(0,3).join(’, ‘);closeAC();}
+async function doSearch(q){
+if(!q.trim())return;showStatus(statusId,‘Searching…’);
+try{const res=await photonSearch(q);if(!res.length){showStatus(statusId,‘No results’);return;}if(res.length===1){flyTo(res[0]);return;}
+ac.innerHTML=’’;res.forEach(item=>{const el=document.createElement(‘div’);el.className=‘ac-item’;el.textContent=item.display_name.split(’,’).slice(0,4).join(’, ’);el.addEventListener(‘click’,()=>flyTo(item));ac.appendChild(el);});ac.classList.add(‘open’);}
+catch(e){showStatus(statusId,‘Error — check connection’);}
 }
-
-// ─────────────────────────────────────────
-// GEOCODER
-// ─────────────────────────────────────────
-async function photonSearch(q) {
-  const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lang=en`);
-  const d = await r.json();
-  return d.features.map(f => ({
-    lat: f.geometry.coordinates[1],
-    lon: f.geometry.coordinates[0],
-    display_name: [f.properties.name, f.properties.city||f.properties.county, f.properties.state, f.properties.country].filter(Boolean).join(', ')
-  }));
+inp.addEventListener(‘input’,()=>{clearTimeout(dbT[inpId]);if(inp.value.length<3){closeAC();return;}dbT[inpId]=setTimeout(()=>doSearch(inp.value),500);});
+inp.addEventListener(‘keydown’,e=>{if(e.key===‘Enter’){clearTimeout(dbT[inpId]);closeAC();doSearch(inp.value);}if(e.key===‘Escape’)closeAC();});
+btn.addEventListener(‘click’,()=>{closeAC();doSearch(inp.value);});
+document.addEventListener(‘click’,e=>{if(!ac.contains(e.target)&&e.target!==inp)closeAC();});
 }
-
-let dbT = {};
-
-function setupSearch(inpId, btnId, acId, mapObj, statusId, pk) {
-  const inp = document.getElementById(inpId);
-  const btn = document.getElementById(btnId);
-  const ac  = document.getElementById(acId);
-
-  function closeAC() { ac.innerHTML = ''; ac.classList.remove('open'); }
-
-  function flyTo(item) {
-    const center = [parseFloat(item.lon), parseFloat(item.lat)];
-    mapObj.flyTo({ center, zoom: mapObj.getZoom(), animate: true, duration: 900 });
-    inp.value = item.display_name.split(',').slice(0, 3).join(', ');
-    closeAC();
-    if (ringActive) setTimeout(drawRings, 950);
-  }
-
-  async function doSearch(q) {
-    if (!q.trim()) return;
-    showStatus(statusId, 'Searching…');
-    try {
-      const res = await photonSearch(q);
-      if (!res.length) { showStatus(statusId, 'No results'); return; }
-      if (res.length === 1) { flyTo(res[0]); return; }
-      ac.innerHTML = '';
-      res.forEach(item => {
-        const el = document.createElement('div');
-        el.className = 'ac-item';
-        el.textContent = item.display_name.split(',').slice(0, 4).join(', ');
-        el.addEventListener('click', () => flyTo(item));
-        ac.appendChild(el);
-      });
-      ac.classList.add('open');
-    } catch(e) { showStatus(statusId, 'Error — check connection'); }
-  }
-
-  inp.addEventListener('input', () => {
-    clearTimeout(dbT[inpId]);
-    if (inp.value.length < 3) { closeAC(); return; }
-    dbT[inpId] = setTimeout(() => doSearch(inp.value), 500);
-  });
-  inp.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { clearTimeout(dbT[inpId]); closeAC(); doSearch(inp.value); }
-    if (e.key === 'Escape') closeAC();
-  });
-  btn.addEventListener('click', () => { closeAC(); doSearch(inp.value); });
-  document.addEventListener('click', e => { if (!ac.contains(e.target) && e.target !== inp) closeAC(); });
-}
-
-setupSearch('home-input',   'home-btn',   'home-ac',   mapHome,   'home-status',   'home');
-setupSearch('target-input', 'target-btn', 'target-ac', mapTarget, 'target-status', 'target');
-
-window.addEventListener('resize', () => {
-  setTimeout(() => { mapHome.resize(); mapTarget.resize(); }, 150);
-});
-
-// Zoom sync on user interaction via zoomend for reliability
-mapHome.on('zoomend', updateUI);
-mapTarget.on('zoomend', updateUI);
+setupSearch(‘home-input’,‘home-btn’,‘home-ac’,mapHome,‘home-status’);
+setupSearch(‘target-input’,‘target-btn’,‘target-ac’,mapTarget,‘target-status’);
+window.addEventListener(‘resize’,()=>{setTimeout(()=>{mapHome.resize();mapTarget.resize();},150);});
 </script>
 
 </body>
