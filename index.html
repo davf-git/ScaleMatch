@@ -242,7 +242,7 @@ function savePins(){try{localStorage.setItem(‘sm_pins_v3’,JSON.stringify(pin
 function renderPins(){
 const list=document.getElementById(‘pins-list’);
 list.innerHTML=’’;
-if(!pins.length){const e=document.createElement(‘span’);e.style.cssText=‘font-size:10px;color:var(–muted);padding:0 6px;white-space:nowrap;font-family:“DM Mono”,monospace;’;e.textContent=‘No saved locations’;list.appendChild(e);return;}
+if(!pins.length){const e=document.createElement(‘span’);e.style.cssText=‘font-size:10px;color:var(--muted);padding:0 6px;white-space:nowrap;font-family:“DM Mono”,monospace;’;e.textContent=‘No saved locations’;list.appendChild(e);return;}
 pins.forEach((pin,i)=>{
 const c=document.createElement(‘div’);c.className=‘pin-chip’;
 c.innerHTML=`<span class="pin-dot" style="background:${pin.panel==='home'?'var(--accent)':'var(--accent2)'}"></span><span class="pin-label">${pin.label}</span><span class="pin-del">×</span>`;
