@@ -94,7 +94,7 @@
     </div>
     <div class="topbar-gap"></div>
     <div id="globe-badge">⊕ Globe</div>
-    <div id="zoom-badge">Z: —</div>
+    <div id="zoom-badge">Z: --</div>
     <button class="tb-btn" id="btn-pan">⇄<span class="tb-label">Pan</span></button>
     <button class="tb-btn" id="btn-style">⊞<span class="tb-label">Style</span></button>
     <button class="tb-btn" id="btn-pins">◈<span class="tb-label">Pins</span></button>
@@ -121,7 +121,7 @@
         <div class="autocomplete-list" id="home-ac"></div>
       </div>
       <div class="map-view" id="map-home"></div>
-      <div class="scale-label" id="home-scale">—</div>
+      <div class="scale-label" id="home-scale">--</div>
       <div class="map-status" id="home-status"></div>
     </div>
     <div class="divider"></div>
@@ -134,7 +134,7 @@
         <div class="autocomplete-list" id="target-ac"></div>
       </div>
       <div class="map-view" id="map-target"></div>
-      <div class="scale-label" id="target-scale">—</div>
+      <div class="scale-label" id="target-scale">--</div>
       <div class="map-status" id="target-status"></div>
     </div>
   </div>
@@ -282,7 +282,7 @@ async function doSearch(q){
 if(!q.trim())return;showStatus(statusId,‘Searching…’);
 try{const res=await photonSearch(q);if(!res.length){showStatus(statusId,‘No results’);return;}if(res.length===1){flyTo(res[0]);return;}
 ac.innerHTML=’’;res.forEach(item=>{const el=document.createElement(‘div’);el.className=‘ac-item’;el.textContent=item.display_name.split(’,’).slice(0,4).join(’, ’);el.addEventListener(‘click’,()=>flyTo(item));ac.appendChild(el);});ac.classList.add(‘open’);}
-catch(e){showStatus(statusId,‘Error — check connection’);}
+catch(e){showStatus(statusId,‘Error -- check connection’);}
 }
 inp.addEventListener(‘input’,()=>{clearTimeout(dbT[inpId]);if(inp.value.length<3){closeAC();return;}dbT[inpId]=setTimeout(()=>doSearch(inp.value),500);});
 inp.addEventListener(‘keydown’,e=>{if(e.key===‘Enter’){clearTimeout(dbT[inpId]);closeAC();doSearch(inp.value);}if(e.key===‘Escape’)closeAC();});
